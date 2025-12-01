@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Dynamic High Contrast - Light Mode */
+    --background: 280 30% 98%;
+    /* Very pale purple/white */
+    --foreground: 280 60% 10%;
+    /* Deep purple/black for text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 280 60% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 280 60% 10%;
+
+    --primary: 320 100% 55%;
+    /* Vibrant Hot Pink */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 280 20% 90%;
+    --secondary-foreground: 280 60% 10%;
+
+    --muted: 280 20% 90%;
+    --muted-foreground: 280 10% 40%;
+
+    --accent: 280 20% 90%;
+    --accent-foreground: 280 60% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 280 20% 80%;
+    --input: 280 20% 80%;
+    --ring: 320 100% 55%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar specific variables for light mode */
+    --sidebar-background: 260 20% 98%;
+    --sidebar-foreground: 260 40% 10%;
+    --sidebar-primary: 330 85% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 260 20% 90%;
+    --sidebar-accent-foreground: 260 40% 10%;
+    --sidebar-border: 260 20% 85%;
+    --sidebar-ring: 330 85% 65%;
+  }
+
+  .dark {
+    /* Dark mode - The main theme from the image */
+    --background: 265 45% 8%;
+    /* Deep Dark Violet #0f0b1e approx */
+    --foreground: 0 0% 100%;
+
+    --card: 265 40% 12%;
+    /* Slightly lighter violet for cards */
+    --card-foreground: 0 0% 100%;
+
+    --popover: 265 40% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 335 85% 65%;
+    /* Hot Pink #ff6b9d approx */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 265 30% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 265 30% 20%;
+    --muted-foreground: 265 10% 70%;
+
+    --accent: 265 30% 20%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 265 30% 20%;
+    --input: 265 30% 20%;
+    --ring: 335 85% 65%;
+
+    /* Gradients, shadows, and transitions for dark mode */
+    --gradient-hero: linear-gradient(135deg, hsl(335 85% 65%), hsl(335 85% 75%));
+    --gradient-accent: linear-gradient(135deg, hsl(265 30% 20%), hsl(265 30% 30%));
+    --gradient-mesh: radial-gradient(at 0% 0%, hsl(335 85% 65% / 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsl(265 30% 20% / 0.15) 0px, transparent 50%);
+    --shadow-soft: 0 4px 20px -2px hsl(0 0% 0% / 0.4);
+    --shadow-medium: 0 10px 40px -4px hsl(0 0% 0% / 0.5);
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
