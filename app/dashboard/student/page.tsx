@@ -7,32 +7,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Video, MessageSquare, User, Plus } from "lucide-react";
+import { Calendar, Clock, Video, MessageSquare, User } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookingModal } from "@/components/BookingModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
 
 export default function StudentDashboardPage() {
+    const { user } = useAuth();
     const [upcomingLessons, setUpcomingLessons] = useState<any[]>([]);
     const [pastLessons, setPastLessons] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchBookings();
-    }, []);
+        if (user) {
+            fetchBookings();
+        }
+    }, [user]);
 
     const fetchBookings = async () => {
         try {
             const { data, error } = await supabase
-                .from('bookings')
+                .from('sessions')
                 .select(`
                     *,
-                    tutors:tutor_id (
+                    tutors (
                         *,
-                        profiles:id (full_name)
+                        profiles (full_name)
                     )
                 `)
-                .order('date', { ascending: true });
+                .eq('student_id', user?.id)
+                .order('start_time', { ascending: true });
 
             if (error) throw error;
 
@@ -41,21 +46,21 @@ export default function StudentDashboardPage() {
             const past: any[] = [];
 
             if (data) {
-                data.forEach(booking => {
-                    const bookingDate = new Date(booking.date);
-                    if (bookingDate >= now) {
-                        upcoming.push(booking);
+                data.forEach(session => {
+                    const sessionDate = new Date(session.start_time);
+                    if (sessionDate >= now) {
+                        upcoming.push(session);
                     } else {
-                        past.push(booking);
+                        past.push(session);
                     }
                 });
             }
 
             setUpcomingLessons(upcoming);
             setPastLessons(past);
-        } catch (error) {
-            console.error('Error fetching bookings:', error);
-            toast.error('Failed to load bookings');
+        } catch (error: any) {
+            console.error('Error fetching bookings:', JSON.stringify(error, null, 2));
+            toast.error('Failed to load bookings: ' + (error.message || 'Unknown error'));
         } finally {
             setLoading(false);
         }
@@ -71,15 +76,6 @@ export default function StudentDashboardPage() {
                         <p className="text-muted-foreground">Manage your lessons and learning journey</p>
                     </div>
                     <div className="flex gap-2">
-                        <BookingModal
-                            trigger={
-                                <Button>
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Book a Lesson
-                                </Button>
-                            }
-                            onSuccess={fetchBookings}
-                        />
                         <Button variant="outline">
                             <User className="h-4 w-4 mr-2" />
                             Edit Profile
@@ -100,7 +96,7 @@ export default function StudentDashboardPage() {
                         ) : upcomingLessons.length === 0 ? (
                             <Card>
                                 <CardContent className="p-6 text-center text-muted-foreground">
-                                    No upcoming lessons.
+                                    No upcoming lessons. Browse tutors to book a session.
                                 </CardContent>
                             </Card>
                         ) : (
@@ -109,10 +105,10 @@ export default function StudentDashboardPage() {
                                     <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Badge variant={lesson.status === 'confirmed' ? 'default' : 'secondary'}>
+                                                <Badge variant={lesson.status === 'BOOKED' ? 'default' : 'secondary'}>
                                                     {lesson.status}
                                                 </Badge>
-                                                <span className="text-sm text-muted-foreground">{lesson.type}</span>
+                                                <span className="text-sm text-muted-foreground">{lesson.location}</span>
                                             </div>
                                             <h3 className="text-xl font-semibold mb-1">{lesson.subject}</h3>
                                             <p className="text-muted-foreground">with {lesson.tutors?.profiles?.full_name}</p>
@@ -121,16 +117,16 @@ export default function StudentDashboardPage() {
                                         <div className="flex items-center gap-6 text-sm">
                                             <div className="flex items-center gap-2">
                                                 <Calendar className="h-4 w-4 text-primary" />
-                                                {lesson.date}
+                                                {format(new Date(lesson.start_time), 'MMM d, yyyy')}
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Clock className="h-4 w-4 text-primary" />
-                                                {lesson.time}
+                                                {format(new Date(lesson.start_time), 'h:mm a')}
                                             </div>
                                         </div>
 
                                         <div className="flex gap-2 w-full md:w-auto">
-                                            {lesson.type === 'online' && lesson.status === 'confirmed' && (
+                                            {lesson.location === 'online' && (
                                                 <Button className="flex-1 md:flex-none">
                                                     <Video className="h-4 w-4 mr-2" />
                                                     Join Class
@@ -163,7 +159,7 @@ export default function StudentDashboardPage() {
                                         <CardContent className="p-6 flex items-center justify-between">
                                             <div>
                                                 <h3 className="font-semibold">{lesson.subject}</h3>
-                                                <p className="text-sm text-muted-foreground">with {lesson.tutors?.profiles?.full_name} • {lesson.date}</p>
+                                                <p className="text-sm text-muted-foreground">with {lesson.tutors?.profiles?.full_name} • {format(new Date(lesson.start_time), 'MMM d, yyyy')}</p>
                                             </div>
                                             <Button variant="secondary" size="sm">Book Again</Button>
                                         </CardContent>

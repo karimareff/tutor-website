@@ -51,6 +51,11 @@ const Header = () => {
                   Dashboard
                 </Link>
               </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/settings">
+                  Settings
+                </Link>
+              </Button>
               <Button variant="outline" onClick={() => logout()}>
                 Sign Out
               </Button>

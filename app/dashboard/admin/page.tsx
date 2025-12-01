@@ -33,18 +33,18 @@ export default function AdminDashboardPage() {
 
             if (profilesError) throw profilesError;
 
-            // Fetch bookings for stats
-            const { data: bookings, error: bookingsError } = await supabase
-                .from('bookings')
+            // Fetch sessions for stats
+            const { data: sessions, error: sessionsError } = await supabase
+                .from('sessions')
                 .select('*');
 
-            if (bookingsError) throw bookingsError;
+            if (sessionsError) throw sessionsError;
 
             setUsers(profiles || []);
             setStats({
                 totalUsers: profiles?.length || 0,
-                totalBookings: bookings?.length || 0,
-                totalRevenue: (bookings?.filter(b => b.status === 'completed').length || 0) * 300, // Mock revenue
+                totalBookings: sessions?.filter(s => s.status === 'BOOKED' || s.status === 'COMPLETED').length || 0,
+                totalRevenue: (sessions?.filter(s => s.status === 'COMPLETED').reduce((acc, curr) => acc + (curr.price || 0), 0)) || 0,
             });
 
         } catch (error) {

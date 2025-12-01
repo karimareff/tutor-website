@@ -24,23 +24,22 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { title, subject, price, location, date, time, description, max_students } = body;
+        const { subject, price, location, start_time, end_time } = body;
 
         // Validate required fields
-        if (!title || !subject || !price || !date || !time) {
+        if (!subject || !price || !start_time || !end_time) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
 
-        // Check for time conflicts
+        // Check for time conflicts for this tutor
         const { data: existingSessions, error: conflictError } = await supabase
             .from('sessions')
             .select('*')
             .eq('tutor_id', user.id)
-            .eq('date', date)
-            .eq('time', time);
+            .or(`and(start_time.lte.${end_time},end_time.gte.${start_time})`); // Overlap check
 
         if (conflictError) {
             return NextResponse.json({ error: conflictError.message }, { status: 500 });
@@ -48,7 +47,7 @@ export async function POST(request: NextRequest) {
 
         if (existingSessions && existingSessions.length > 0) {
             return NextResponse.json(
-                { error: 'Time slot already booked' },
+                { error: 'Time slot overlaps with an existing session' },
                 { status: 409 }
             );
         }
@@ -58,15 +57,12 @@ export async function POST(request: NextRequest) {
             .from('sessions')
             .insert({
                 tutor_id: user.id,
-                title,
                 subject,
                 price,
-                location: location || 'Online',
-                date,
-                time,
-                description: description || '',
-                max_students: max_students || 1,
-                status: 'available'
+                location: location || 'online',
+                start_time,
+                end_time,
+                status: 'AVAILABLE'
             })
             .select()
             .single();

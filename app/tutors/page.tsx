@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Star, MapPin, Clock, Search } from "lucide-react";
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function TutorsPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -29,18 +30,19 @@ export default function TutorsPage() {
             const { data, error } = await supabase
                 .from('tutors')
                 .select(`
-          *,
-          profiles:id (
-            full_name,
-            avatar_url
-          )
-        `);
+                    *,
+                    profiles (
+                        full_name,
+                        avatar_url,
+                        bio
+                    )
+                `);
 
             if (error) throw error;
             setTutors(data || []);
-        } catch (error) {
-            console.error('Error fetching tutors:', error);
-            toast.error('Failed to load tutors');
+        } catch (error: any) {
+            console.error('Error fetching tutors:', JSON.stringify(error, null, 2));
+            toast.error('Failed to load tutors: ' + (error.message || 'Unknown error'));
         } finally {
             setLoading(false);
         }
@@ -111,49 +113,32 @@ export default function TutorsPage() {
                         ) : (
                             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {filteredTutors.map((tutor) => (
-                                    <Card key={tutor.id} className="overflow-hidden hover:shadow-[var(--shadow-medium)] transition-shadow group">
-                                        <CardContent className="p-0">
-                                            <div className="relative h-48 bg-white overflow-hidden">
-                                                <img
-                                                    src={tutor.profiles?.avatar_url || "https://github.com/shadcn.png"}
-                                                    alt={tutor.profiles?.full_name}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                />
-                                                <div className="absolute top-2 right-2">
-                                                    <Badge className="bg-white/90 text-black backdrop-blur-sm shadow-sm hover:bg-white">
-                                                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
-                                                        {tutor.rating}
-                                                    </Badge>
-                                                </div>
+                                    <Card key={tutor.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 group border-none shadow-md">
+                                        <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+                                            <div className="relative">
+                                                <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                                                    <AvatarImage src={tutor.profiles?.avatar_url} className="object-cover" />
+                                                    <AvatarFallback>{tutor.profiles?.full_name?.[0]}</AvatarFallback>
+                                                </Avatar>
+                                                <Badge className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground">
+                                                    {tutor.rating || "5.0"} <Star className="h-3 w-3 ml-1 fill-current" />
+                                                </Badge>
                                             </div>
 
-                                            <div className="p-4 space-y-3">
-                                                <div>
-                                                    <h3 className="font-semibold text-base mb-1 truncate">{tutor.profiles?.full_name}</h3>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {tutor.subjects?.join(", ")} Specialist
-                                                    </p>
-                                                </div>
+                                            <div className="space-y-2 w-full">
+                                                <h3 className="font-bold text-lg truncate">{tutor.profiles?.full_name}</h3>
+                                                <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                                                    {tutor.profiles?.bio || "No bio available"}
+                                                </p>
+                                            </div>
 
-                                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                    <div className="flex items-center gap-1">
-                                                        <MapPin className="h-3 w-3" />
-                                                        {tutor.bio ? "Available" : "Online"}
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="h-3 w-3" />
-                                                        5+ years
-                                                    </div>
+                                            <div className="w-full pt-4 border-t flex items-center justify-between">
+                                                <div className="font-bold text-lg text-primary">
+                                                    {tutor.hourly_rate} <span className="text-xs font-normal text-muted-foreground">EGP/hr</span>
                                                 </div>
-
-                                                <div className="flex items-center justify-between pt-3 border-t">
-                                                    <div>
-                                                        <div className="text-lg font-bold text-primary">{tutor.hourly_rate} <span className="text-xs font-normal text-muted-foreground">EGP/hr</span></div>
-                                                    </div>
-                                                    <Button size="sm" className="h-8 text-xs" asChild>
-                                                        <Link href={`/tutors/${tutor.id}`}>View</Link>
-                                                    </Button>
-                                                </div>
+                                                <Button size="sm" asChild>
+                                                    <Link href={`/tutors/${tutor.id}`}>View Profile</Link>
+                                                </Button>
                                             </div>
                                         </CardContent>
                                     </Card>
