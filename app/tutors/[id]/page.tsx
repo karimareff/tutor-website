@@ -73,21 +73,34 @@ export default function TutorProfilePage() {
 
         setBookingId(sessionId);
         try {
+            // Check if already booked
+            const { data: existingBooking } = await supabase
+                .from('bookings')
+                .select('id')
+                .eq('session_id', sessionId)
+                .eq('student_id', user.id)
+                .single();
+
+            if (existingBooking) {
+                toast.error("You have already booked this session");
+                return;
+            }
+
+            // Insert into bookings table
             const { error } = await supabase
-                .from('sessions')
-                .update({
-                    student_id: user.id,
-                    status: 'BOOKED'
-                })
-                .eq('id', sessionId)
-                .eq('status', 'AVAILABLE'); // Optimistic concurrency check
+                .from('bookings')
+                .insert({
+                    session_id: sessionId,
+                    student_id: user.id
+                });
 
             if (error) throw error;
 
             toast.success("Session booked successfully!");
             fetchTutorAndSessions(); // Refresh list
         } catch (error: any) {
-            toast.error("Failed to book session. It might have been taken.");
+            console.error('Booking error:', error);
+            toast.error(error.message || "Failed to book session. It might have been taken.");
         } finally {
             setBookingId(null);
         }

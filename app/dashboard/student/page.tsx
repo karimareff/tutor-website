@@ -12,6 +12,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import Loading from "@/components/ui/loading";
+import ReviewDialog from "@/components/ReviewDialog";
 
 export default function StudentDashboardPage() {
     const { user } = useAuth();
@@ -28,16 +30,18 @@ export default function StudentDashboardPage() {
     const fetchBookings = async () => {
         try {
             const { data, error } = await supabase
-                .from('sessions')
+                .from('bookings')
                 .select(`
-                    *,
-                    tutors (
+                    id,
+                    sessions (
                         *,
-                        profiles (full_name)
+                        tutors (
+                            *,
+                            profiles (full_name)
+                        )
                     )
                 `)
-                .eq('student_id', user?.id)
-                .order('start_time', { ascending: true });
+                .eq('student_id', user?.id);
 
             if (error) throw error;
 
@@ -46,15 +50,25 @@ export default function StudentDashboardPage() {
             const past: any[] = [];
 
             if (data) {
-                data.forEach(session => {
+                data.forEach((booking: any) => {
+                    const session = booking.sessions;
+                    // Attach booking ID to session object for easier access in UI if needed, 
+                    // or just use the session object. 
+                    // The UI expects 'lesson' object with session fields.
+                    const lesson = { ...session, booking_id: booking.id };
+
                     const sessionDate = new Date(session.start_time);
                     if (sessionDate >= now) {
-                        upcoming.push(session);
+                        upcoming.push(lesson);
                     } else {
-                        past.push(session);
+                        past.push(lesson);
                     }
                 });
             }
+
+            // Sort by date
+            upcoming.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+            past.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
 
             setUpcomingLessons(upcoming);
             setPastLessons(past);
@@ -63,6 +77,25 @@ export default function StudentDashboardPage() {
             toast.error('Failed to load bookings: ' + (error.message || 'Unknown error'));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCancelBooking = async (bookingId: string) => {
+        if (!confirm("Are you sure you want to cancel this booking?")) return;
+
+        try {
+            const { error } = await supabase
+                .from('bookings')
+                .delete()
+                .eq('id', bookingId);
+
+            if (error) throw error;
+
+            toast.success("Booking cancelled successfully");
+            fetchBookings();
+        } catch (error: any) {
+            console.error('Error cancelling booking:', error);
+            toast.error("Failed to cancel booking");
         }
     };
 
@@ -92,7 +125,7 @@ export default function StudentDashboardPage() {
 
                     <TabsContent value="upcoming" className="space-y-4">
                         {loading ? (
-                            <div>Loading...</div>
+                            <Loading />
                         ) : upcomingLessons.length === 0 ? (
                             <Card>
                                 <CardContent className="p-6 text-center text-muted-foreground">
@@ -136,6 +169,13 @@ export default function StudentDashboardPage() {
                                                 <MessageSquare className="h-4 w-4 mr-2" />
                                                 Chat
                                             </Button>
+                                            <Button
+                                                variant="destructive"
+                                                className="flex-1 md:flex-none"
+                                                onClick={() => handleCancelBooking(lesson.booking_id)}
+                                            >
+                                                Cancel
+                                            </Button>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -146,7 +186,7 @@ export default function StudentDashboardPage() {
                     <TabsContent value="past">
                         <div className="grid gap-4">
                             {loading ? (
-                                <div>Loading...</div>
+                                <Loading />
                             ) : pastLessons.length === 0 ? (
                                 <Card>
                                     <CardContent className="p-6 text-center text-muted-foreground">
@@ -154,17 +194,36 @@ export default function StudentDashboardPage() {
                                     </CardContent>
                                 </Card>
                             ) : (
-                                pastLessons.map((lesson) => (
-                                    <Card key={lesson.id}>
-                                        <CardContent className="p-6 flex items-center justify-between">
-                                            <div>
-                                                <h3 className="font-semibold">{lesson.subject}</h3>
-                                                <p className="text-sm text-muted-foreground">with {lesson.tutors?.profiles?.full_name} • {format(new Date(lesson.start_time), 'MMM d, yyyy')}</p>
-                                            </div>
-                                            <Button variant="secondary" size="sm">Book Again</Button>
-                                        </CardContent>
-                                    </Card>
-                                ))
+                                pastLessons.map((lesson) => {
+                                    // TODO: Re-enable after running create_reviews_table.sql
+                                    const hasReviewed = false; // lesson.reviews && lesson.reviews.length > 0;
+
+
+                                    return (
+                                        <Card key={lesson.id}>
+                                            <CardContent className="p-6 flex items-center justify-between">
+                                                <div>
+                                                    <h3 className="font-semibold">{lesson.subject}</h3>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        with {lesson.tutors?.profiles?.full_name} • {format(new Date(lesson.start_time), 'MMM d, yyyy')}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {!hasReviewed && (
+                                                        <ReviewDialog
+                                                            sessionId={lesson.id}
+                                                            tutorId={lesson.tutors?.id}
+                                                            studentId={user?.id || ''}
+                                                            tutorName={lesson.tutors?.profiles?.full_name || 'Tutor'}
+                                                            onReviewSubmitted={fetchBookings}
+                                                        />
+                                                    )}
+                                                    <Button variant="secondary" size="sm">Book Again</Button>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })
                             )}
                         </div>
                     </TabsContent>

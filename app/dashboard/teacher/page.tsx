@@ -47,15 +47,22 @@ export default function TeacherDashboardPage() {
 
     const fetchDashboardData = async () => {
         try {
+            console.log('=== Fetching dashboard data for tutor:', user?.id);
+
             // Fetch all sessions for this tutor
             const { data: sessionsData, error } = await supabase
                 .from('sessions')
                 .select(`
                     *,
-                    students:profiles!student_id (*)
+                    bookings (
+                        *,
+                        students:profiles!bookings_student_id_fkey (*)
+                    )
                 `)
                 .eq('tutor_id', user?.id)
                 .order('start_time', { ascending: true });
+
+            console.log('=== Sessions query result:', { sessionsData, error });
 
             if (error) throw error;
 
@@ -63,17 +70,33 @@ export default function TeacherDashboardPage() {
 
             // Calculate stats
             const completedSessions = sessionsData?.filter(s => s.status === 'COMPLETED') || [];
-            const uniqueStudents = new Set(sessionsData?.filter(s => s.student_id).map(s => s.student_id) || []);
-            const earnings = completedSessions.reduce((acc, curr) => acc + (curr.price || 0), 0);
+
+            // Calculate unique students from all bookings
+            const allBookings = sessionsData?.flatMap(s => s.bookings || []) || [];
+            console.log('=== All bookings:', allBookings);
+
+            const uniqueStudents = new Set(allBookings.map((b: any) => b.student_id));
+
+            // Calculate earnings
+            const earnings = allBookings.reduce((acc: number, curr: any) => {
+                const session = sessionsData?.find(s => s.id === curr.session_id);
+                return acc + (session?.price || 0);
+            }, 0);
+
+            console.log('=== Stats calculated:', {
+                totalEarnings: earnings,
+                totalStudents: uniqueStudents.size,
+                sessionsCount: sessionsData?.length
+            });
 
             setStats({
                 totalEarnings: earnings,
                 totalStudents: uniqueStudents.size,
                 averageRating: 4.9, // Placeholder
             });
-        } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-            toast.error('Failed to load dashboard data');
+        } catch (error: any) {
+            console.error('=== Error fetching dashboard data:', JSON.stringify(error, null, 2));
+            toast.error('Failed to load dashboard data: ' + (error.message || 'Unknown error'));
         } finally {
             setLoading(false);
         }
@@ -268,7 +291,7 @@ export default function TeacherDashboardPage() {
                             <CardContent>
                                 {loading ? (
                                     <div>Loading...</div>
-                                ) : sessions.filter(s => s.status === 'BOOKED').length === 0 ? (
+                                ) : sessions.flatMap(s => s.bookings || []).length === 0 ? (
                                     <div className="text-center py-8 text-muted-foreground">
                                         No upcoming bookings yet.
                                     </div>
@@ -284,24 +307,29 @@ export default function TeacherDashboardPage() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {sessions.filter(s => s.status === 'BOOKED').map((session) => (
-                                                    <tr key={session.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                                {sessions.flatMap(session =>
+                                                    (session.bookings || []).map((booking: any) => ({
+                                                        ...booking,
+                                                        session // Attach session to booking for display
+                                                    }))
+                                                ).map((booking) => (
+                                                    <tr key={booking.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                                         <td className="p-4 align-middle">
                                                             <div className="flex flex-col">
-                                                                <span className="font-medium">{session.students?.full_name || 'Unknown'}</span>
-                                                                <span className="text-xs text-muted-foreground">{session.students?.email}</span>
+                                                                <span className="font-medium">{booking.students?.full_name || 'Unknown'}</span>
+                                                                <span className="text-xs text-muted-foreground">{booking.students?.email}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="p-4 align-middle">{session.subject}</td>
+                                                        <td className="p-4 align-middle">{booking.session.subject}</td>
                                                         <td className="p-4 align-middle">
                                                             <div className="flex flex-col">
-                                                                <span>{format(new Date(session.start_time), 'MMM d, yyyy')}</span>
+                                                                <span>{format(new Date(booking.session.start_time), 'MMM d, yyyy')}</span>
                                                                 <span className="text-xs text-muted-foreground">
-                                                                    {format(new Date(session.start_time), 'h:mm a')} - {format(new Date(session.end_time), 'h:mm a')}
+                                                                    {format(new Date(booking.session.start_time), 'h:mm a')} - {format(new Date(booking.session.end_time), 'h:mm a')}
                                                                 </span>
                                                             </div>
                                                         </td>
-                                                        <td className="p-4 align-middle">{session.location}</td>
+                                                        <td className="p-4 align-middle">{booking.session.location}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -349,9 +377,9 @@ export default function TeacherDashboardPage() {
                                                             {session.location}
                                                         </span>
                                                     </div>
-                                                    {session.status === 'BOOKED' && (
+                                                    {session.bookings && session.bookings.length > 0 && (
                                                         <p className="text-sm text-primary">
-                                                            Booked by: {session.students?.full_name || 'Student'}
+                                                            {session.bookings.length} student{session.bookings.length !== 1 ? 's' : ''} booked
                                                         </p>
                                                     )}
                                                 </div>

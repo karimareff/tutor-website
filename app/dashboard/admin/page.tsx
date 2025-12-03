@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import Loading from "@/components/ui/loading";
 
 export default function AdminDashboardPage() {
     const [stats, setStats] = useState({
@@ -133,7 +134,7 @@ export default function AdminDashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 {loading ? (
-                                    <div>Loading...</div>
+                                    <Loading />
                                 ) : (
                                     <div className="rounded-md border">
                                         <table className="w-full text-sm">

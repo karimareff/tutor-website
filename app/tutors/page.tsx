@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Star, MapPin, Clock, Search } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Loading from "@/components/ui/loading";
 
 export default function TutorsPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -109,7 +110,7 @@ export default function TutorsPage() {
                         </div>
 
                         {loading ? (
-                            <div className="text-center py-12">Loading tutors...</div>
+                            <Loading />
                         ) : (
                             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {filteredTutors.map((tutor) => (
