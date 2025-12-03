@@ -12,7 +12,7 @@ const Footer = () => {
               <span>TutorHub Egypt</span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Connect with Egypt's best tutors for AST, SAT, and EST exam preparation.
+              Connect with Egypt's best tutors for ACT, SAT, and EST exam preparation.
             </p>
           </div>
 

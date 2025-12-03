@@ -21,6 +21,7 @@ export default function TutorProfilePage() {
 
     const [tutor, setTutor] = useState<any>(null);
     const [sessions, setSessions] = useState<any[]>([]);
+    const [reviews, setReviews] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [bookingId, setBookingId] = useState<string | null>(null);
 
@@ -56,6 +57,19 @@ export default function TutorProfilePage() {
 
             if (sessionsError) throw sessionsError;
             setSessions(sessionsData || []);
+
+            // Fetch reviews
+            const { data: reviewsData, error: reviewsError } = await supabase
+                .from('reviews')
+                .select(`
+                    *,
+                    students:profiles!reviews_student_id_fkey (full_name)
+                `)
+                .eq('tutor_id', id)
+                .order('created_at', { ascending: false });
+
+            if (reviewsError) throw reviewsError;
+            setReviews(reviewsData || []);
 
         } catch (error: any) {
             console.error('Error fetching data:', JSON.stringify(error, null, 2));
@@ -189,6 +203,47 @@ export default function TutorProfilePage() {
                                                                 Book
                                                             </Button>
                                                         </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Star className="h-5 w-5" />
+                                            Student Reviews ({reviews.length})
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {reviews.length === 0 ? (
+                                            <p className="text-muted-foreground">No reviews yet.</p>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {reviews.map((review) => (
+                                                    <div key={review.id} className="border-b pb-4 last:border-0">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="font-semibold">{review.students?.full_name || 'Student'}</span>
+                                                            <div className="flex">
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <Star
+                                                                        key={i}
+                                                                        className={`h-4 w-4 ${i < review.rating
+                                                                                ? 'fill-yellow-400 text-yellow-400'
+                                                                                : 'text-gray-300'
+                                                                            }`}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        {review.comment && (
+                                                            <p className="text-sm text-muted-foreground">{review.comment}</p>
+                                                        )}
+                                                        <p className="text-xs text-muted-foreground mt-2">
+                                                            {format(new Date(review.created_at), 'MMM d, yyyy')}
+                                                        </p>
                                                     </div>
                                                 ))}
                                             </div>

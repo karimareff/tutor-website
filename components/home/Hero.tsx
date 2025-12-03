@@ -94,7 +94,7 @@ const Hero = () => {
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
             Master Your <br className="hidden md:block" />
             <span className="relative inline-block mx-2">
-              <span className="text-gradient">AST, SAT & EST</span>
+              <span className="text-gradient">ACT, SAT & EST</span>
               <Sparkles className="absolute -top-6 -right-8 w-8 h-8 text-yellow-400 animate-bounce hidden md:block" />
             </span>
             <br />
@@ -108,36 +108,39 @@ const Hero = () => {
           </p>
 
           {/* Search & CTA */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto pt-4">
-            <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search for tutors or subjects..."
-                className="pl-12 h-14 text-lg bg-background/80 backdrop-blur-sm border-primary/20 focus:border-primary/50 transition-all shadow-sm"
-              />
+          <div className="flex flex-col items-center gap-8 pt-8 w-full">
+            {/* Large Search Bar */}
+            <div className="w-full max-w-2xl relative z-20">
+              <div className="relative flex items-center group">
+                <Search className="absolute left-5 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Input
+                  placeholder="What do you want to learn? (e.g. SAT, Math, Physics)"
+                  className="w-full h-16 pl-14 pr-32 rounded-full text-lg bg-background/95 backdrop-blur-xl border-primary/20 focus:border-primary/50 shadow-2xl shadow-primary/5 transition-all"
+                />
+                <div className="absolute right-2 top-2 bottom-2">
+                  <Button size="lg" className="h-full rounded-full px-8 shadow-lg">
+                    Search
+                  </Button>
+                </div>
+              </div>
             </div>
-            <Button size="lg" asChild className="h-14 px-8 text-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
-              <Link href="/tutors">
-                Find Tutors <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <Button size="lg" asChild className="h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all rounded-full">
+                <Link href="/tutors">
+                  Browse All Tutors <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild className="h-12 px-8 text-base hover:bg-primary/5 transition-all rounded-full border-primary/20">
+                <Link href="/signup">
+                  Become a Tutor
+                </Link>
+              </Button>
+            </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 pt-12 max-w-2xl mx-auto border-t border-border/50 mt-12">
-            <div className="group hover:-translate-y-1 transition-transform duration-300">
-              <div className="text-4xl md:text-5xl font-bold text-gradient">500+</div>
-              <div className="text-sm md:text-base text-muted-foreground mt-2 font-medium">Verified Tutors</div>
-            </div>
-            <div className="group hover:-translate-y-1 transition-transform duration-300 delay-100">
-              <div className="text-4xl md:text-5xl font-bold text-gradient">10k+</div>
-              <div className="text-sm md:text-base text-muted-foreground mt-2 font-medium">Happy Students</div>
-            </div>
-            <div className="group hover:-translate-y-1 transition-transform duration-300 delay-200">
-              <div className="text-4xl md:text-5xl font-bold text-gradient">95%</div>
-              <div className="text-sm md:text-base text-muted-foreground mt-2 font-medium">Success Rate</div>
-            </div>
-          </div>
+
         </div>
       </div>
     </section>

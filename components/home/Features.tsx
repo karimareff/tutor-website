@@ -5,7 +5,7 @@ const features = [
   {
     icon: Users,
     title: "Expert Tutors",
-    description: "Connect with certified tutors who specialize in AST, SAT, and EST preparation"
+    description: "Connect with certified tutors who specialize in ACT, SAT, and EST preparation"
   },
   {
     icon: Shield,
@@ -47,11 +47,11 @@ const Features = () => {
             We make finding the perfect tutor simple, safe, and effective
           </p>
         </div>
-        
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
-            <Card 
-              key={feature.title} 
+            <Card
+              key={feature.title}
               className="group border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[var(--shadow-medium)] hover:-translate-y-1 bg-card/50 backdrop-blur-sm"
               style={{ animationDelay: `${index * 100}ms` }}
             >

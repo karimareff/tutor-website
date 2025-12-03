@@ -29,7 +29,8 @@ export default function StudentDashboardPage() {
 
     const fetchBookings = async () => {
         try {
-            const { data, error } = await supabase
+            // 1. Fetch bookings
+            const { data: bookingsData, error: bookingsError } = await supabase
                 .from('bookings')
                 .select(`
                     id,
@@ -43,17 +44,39 @@ export default function StudentDashboardPage() {
                 `)
                 .eq('student_id', user?.id);
 
-            if (error) throw error;
+            if (bookingsError) throw bookingsError;
+
+            // 2. Fetch reviews for this student
+            const { data: reviewsData, error: reviewsError } = await supabase
+                .from('reviews')
+                .select('id, session_id, rating')
+                .eq('student_id', user?.id);
+
+            if (reviewsError) {
+                console.error("Error fetching reviews:", reviewsError);
+                // Don't throw, just continue without reviews
+            }
+
+            // 3. Create a map of session_id -> reviews
+            const reviewsMap = new Map();
+            if (reviewsData) {
+                reviewsData.forEach((review: any) => {
+                    if (!reviewsMap.has(review.session_id)) {
+                        reviewsMap.set(review.session_id, []);
+                    }
+                    reviewsMap.get(review.session_id).push(review);
+                });
+            }
 
             const now = new Date();
             const upcoming: any[] = [];
             const past: any[] = [];
 
-            if (data) {
-                data.forEach((booking: any) => {
+            if (bookingsData) {
+                bookingsData.forEach((booking: any) => {
                     const session = booking.sessions;
-                    // Attach booking ID to session object for easier access in UI if needed, 
-                    // or just use the session object. 
+                    // Attach reviews to session object
+                    session.reviews = reviewsMap.get(session.id) || [];
                     // The UI expects 'lesson' object with session fields.
                     const lesson = { ...session, booking_id: booking.id };
 
@@ -195,9 +218,7 @@ export default function StudentDashboardPage() {
                                 </Card>
                             ) : (
                                 pastLessons.map((lesson) => {
-                                    // TODO: Re-enable after running create_reviews_table.sql
-                                    const hasReviewed = false; // lesson.reviews && lesson.reviews.length > 0;
-
+                                    const hasReviewed = lesson.reviews && lesson.reviews.length > 0;
 
                                     return (
                                         <Card key={lesson.id}>

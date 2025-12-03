@@ -89,7 +89,7 @@ export default function TutorsPage() {
                                 <SelectContent>
                                     <SelectItem value="all">All Exams</SelectItem>
                                     <SelectItem value="SAT">SAT</SelectItem>
-                                    <SelectItem value="AST">AST</SelectItem>
+                                    <SelectItem value="ACT">ACT</SelectItem>
                                     <SelectItem value="EST">EST</SelectItem>
                                 </SelectContent>
                             </Select>

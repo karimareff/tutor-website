@@ -9,7 +9,7 @@ const tutors = [
     id: 1,
     name: "Dr. Ahmed Hassan",
     subject: "Mathematics",
-    exams: ["SAT", "AST"],
+    exams: ["SAT", "ACT"],
     rating: 4.9,
     reviews: 127,
     price: 300,
@@ -33,7 +33,7 @@ const tutors = [
     id: 3,
     name: "Mohamed Ali",
     subject: "Physics",
-    exams: ["AST", "SAT"],
+    exams: ["ACT", "SAT"],
     rating: 4.9,
     reviews: 143,
     price: 320,
@@ -61,7 +61,7 @@ const PopularTutors = () => {
           </Button>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {tutors.map((tutor) => (
             <Card key={tutor.id} className="overflow-hidden hover:shadow-[var(--shadow-medium)] transition-shadow group">
               <CardContent className="p-0">
