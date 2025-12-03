@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+import RecurringSessionDialog from "@/components/RecurringSessionDialog";
 
 export default function TeacherDashboardPage() {
     const { user } = useAuth();
@@ -27,6 +28,7 @@ export default function TeacherDashboardPage() {
         averageRating: 5.0,
     });
     const [sessions, setSessions] = useState<any[]>([]);
+    const [reviews, setReviews] = useState<any[]>([]);
 
     // Create Session Form State
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -89,10 +91,32 @@ export default function TeacherDashboardPage() {
                 sessionsCount: sessionsData?.length
             });
 
+            // Fetch reviews for this tutor
+            const { data: reviewsData, error: reviewsError } = await supabase
+                .from('reviews')
+                .select(`
+                    *,
+                    students:profiles!reviews_student_id_fkey (full_name),
+                    sessions (subject)
+                `)
+                .eq('tutor_id', user?.id)
+                .order('created_at', { ascending: false });
+
+            if (reviewsError) {
+                console.error('Error fetching reviews:', reviewsError);
+            } else {
+                setReviews(reviewsData || []);
+            }
+
+            // Calculate actual average rating from reviews
+            const avgRating = reviewsData && reviewsData.length > 0
+                ? reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length
+                : 5.0;
+
             setStats({
                 totalEarnings: earnings,
                 totalStudents: uniqueStudents.size,
-                averageRating: 4.9, // Placeholder
+                averageRating: Number(avgRating.toFixed(1)),
             });
         } catch (error: any) {
             console.error('=== Error fetching dashboard data:', JSON.stringify(error, null, 2));
@@ -255,6 +279,10 @@ export default function TeacherDashboardPage() {
                                 </div>
                             </DialogContent>
                         </Dialog>
+                        <RecurringSessionDialog
+                            tutorId={user?.id || ''}
+                            onSessionsCreated={fetchDashboardData}
+                        />
                     </div>
                 </div>
 
@@ -262,6 +290,7 @@ export default function TeacherDashboardPage() {
                     <TabsList>
                         <TabsTrigger value="sessions">My Sessions</TabsTrigger>
                         <TabsTrigger value="bookings">Booked Students</TabsTrigger>
+                        <TabsTrigger value="reviews">Reviews</TabsTrigger>
                         <TabsTrigger value="overview">Overview</TabsTrigger>
                     </TabsList>
 
@@ -334,6 +363,59 @@ export default function TeacherDashboardPage() {
                                                 ))}
                                             </tbody>
                                         </table>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="reviews">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Star className="h-5 w-5" />
+                                    Student Reviews ({reviews.length})
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {loading ? (
+                                    <div>Loading...</div>
+                                ) : reviews.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        No reviews yet. Students will be able to review you after completing sessions.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {reviews.map((review) => (
+                                            <div key={review.id} className="border-b pb-4 last:border-0">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <div className="font-semibold">{review.students?.full_name || 'Student'}</div>
+                                                        <div className="text-sm text-muted-foreground">{review.sessions?.subject || 'Session'}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <Star
+                                                                    key={i}
+                                                                    className={`h-4 w-4 ${i < review.rating
+                                                                        ? 'fill-yellow-400 text-yellow-400'
+                                                                        : 'text-gray-300'
+                                                                        }`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                        <span className="text-sm font-medium">{review.rating}/5</span>
+                                                    </div>
+                                                </div>
+                                                {review.comment && (
+                                                    <p className="text-sm text-muted-foreground mb-2">{review.comment}</p>
+                                                )}
+                                                <p className="text-xs text-muted-foreground">
+                                                    {format(new Date(review.created_at), 'MMM d, yyyy')}
+                                                </p>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </CardContent>
