@@ -82,7 +82,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 data = newProfile;
                 error = null;
             } else if (error) {
-                console.error('Error fetching profile:', JSON.stringify(error, null, 2));
+                if (error.message?.includes('Failed to fetch')) {
+                    console.error('Network error: Failed to connect to Supabase. Please check your internet connection and ensure NEXT_PUBLIC_SUPABASE_URL is correct in .env.local');
+                } else {
+                    console.error('Error fetching profile:', error);
+                }
             }
 
             if (data) {

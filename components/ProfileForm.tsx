@@ -24,7 +24,13 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         bio: "",
         hourly_rate: "",
         avatar_url: "",
+        video_url: "",
+        curriculums: [] as string[],
+        subjects: [] as string[],
     });
+
+    const AVAILABLE_CURRICULUMS = ["IGCSE", "American Diploma"];
+    const AVAILABLE_SUBJECTS = ["Mathematics", "Physics", "Chemistry", "Biology", "English", "History", "Computer Science", "Business", "Economics"];
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -47,18 +53,23 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
             // Fetch tutor data for hourly rate
             const { data: tutorData, error: tutorError } = await supabase
                 .from('tutors')
-                .select('hourly_rate')
+                .select('hourly_rate, video_url, curriculums, subjects')
                 .eq('id', user.id)
                 .single();
 
-            // It's possible the user is not a tutor yet or record missing, handle gracefully
             const hourlyRate = tutorData?.hourly_rate || "";
+            const videoUrl = tutorData?.video_url || "";
+            const curriculums = tutorData?.curriculums || [];
+            const subjects = tutorData?.subjects || [];
 
             setFormData({
                 full_name: profileData.full_name || "",
                 bio: profileData.bio || "",
                 avatar_url: profileData.avatar_url || "",
                 hourly_rate: hourlyRate.toString(),
+                video_url: videoUrl,
+                curriculums: curriculums,
+                subjects: subjects,
             });
         } catch (error) {
             console.error('Error fetching profile data:', error);
@@ -123,6 +134,9 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 .upsert({
                     id: user.id,
                     hourly_rate: parseInt(formData.hourly_rate) || 0,
+                    video_url: formData.video_url,
+                    curriculums: formData.curriculums,
+                    subjects: formData.subjects,
                 });
 
             if (tutorError) throw tutorError;
@@ -202,6 +216,67 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                                 onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
                                 placeholder="300"
                             />
+                        </div>
+
+                        <div className="space-y-3">
+                            <Label>Curriculum</Label>
+                            <div className="flex flex-wrap gap-4">
+                                {AVAILABLE_CURRICULUMS.map((curr) => (
+                                    <div key={curr} className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id={`curr-${curr}`}
+                                            checked={formData.curriculums.includes(curr)}
+                                            onChange={(e) => {
+                                                const updated = e.target.checked
+                                                    ? [...formData.curriculums, curr]
+                                                    : formData.curriculums.filter(c => c !== curr);
+                                                setFormData({ ...formData, curriculums: updated });
+                                            }}
+                                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <Label htmlFor={`curr-${curr}`} className="font-normal cursor-pointer">{curr}</Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <Label>Subjects</Label>
+                            <div className="flex flex-wrap gap-2">
+                                {AVAILABLE_SUBJECTS.map((subject) => {
+                                    const isSelected = formData.subjects.includes(subject);
+                                    return (
+                                        <div
+                                            key={subject}
+                                            onClick={() => {
+                                                const updated = isSelected
+                                                    ? formData.subjects.filter(s => s !== subject)
+                                                    : [...formData.subjects, subject];
+                                                setFormData({ ...formData, subjects: updated });
+                                            }}
+                                            className={`cursor-pointer px-3 py-1.5 rounded-full text-sm border transition-colors ${isSelected
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "bg-background hover:bg-muted"
+                                                }`}
+                                        >
+                                            {subject}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <p className="text-xs text-muted-foreground">Select all the subjects you are qualified to teach.</p>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="video_url">Introduction Video (Optional)</Label>
+                            <Input
+                                id="video_url"
+                                value={formData.video_url}
+                                onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                                placeholder="https://www.youtube.com/watch?v=..."
+                            />
+                            <p className="text-sm text-muted-foreground">Paste a YouTube link here to show students who you are.</p>
                         </div>
                     </div>
 

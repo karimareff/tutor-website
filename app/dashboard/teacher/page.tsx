@@ -41,6 +41,7 @@ export default function TeacherDashboardPage() {
         endTime: "",
         location: "online"
     });
+    const [tutorSubjects, setTutorSubjects] = useState<string[]>([]);
 
     useEffect(() => {
         if (user) {
@@ -119,6 +120,17 @@ export default function TeacherDashboardPage() {
                 totalStudents: uniqueStudents.size,
                 averageRating: Number(avgRating.toFixed(1)),
             });
+
+            // Fetch tutor subjects for the dropdown
+            const { data: tutorData } = await supabase
+                .from('tutors')
+                .select('subjects')
+                .eq('id', user?.id)
+                .single();
+
+            if (tutorData?.subjects) {
+                setTutorSubjects(tutorData.subjects);
+            }
         } catch (error: any) {
             console.error('=== Error fetching dashboard data:', JSON.stringify(error, null, 2));
             toast.error('Failed to load dashboard data: ' + (error.message || 'Unknown error'));
@@ -220,11 +232,25 @@ export default function TeacherDashboardPage() {
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
                                         <Label>Subject</Label>
-                                        <Input
+                                        <Select
                                             value={newSession.subject}
-                                            onChange={(e) => setNewSession({ ...newSession, subject: e.target.value })}
-                                            placeholder="e.g. Calculus 101"
-                                        />
+                                            onValueChange={(val) => setNewSession({ ...newSession, subject: val })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a subject" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {tutorSubjects.length > 0 ? (
+                                                    tutorSubjects.map((subject) => (
+                                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-2 text-sm text-muted-foreground text-center">
+                                                        No subjects found. Please update your profile.
+                                                    </div>
+                                                )}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     <div className="grid gap-2">
                                         <Label>Price (EGP)</Label>

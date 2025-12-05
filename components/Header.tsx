@@ -47,8 +47,8 @@ const Header = () => {
           {user ? (
             <>
               <Button variant="ghost" asChild>
-                <Link href={profile?.role === 'tutor' ? "/dashboard/teacher" : "/dashboard/student"}>
-                  Dashboard
+                <Link href={profile?.role === 'tutor' ? "/dashboard/teacher" : "/my-bookings"}>
+                  {profile?.role === 'tutor' ? "Dashboard" : "My Bookings"}
                 </Link>
               </Button>
               <Button variant="ghost" asChild>

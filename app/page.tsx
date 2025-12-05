@@ -4,6 +4,7 @@ import Hero from "@/components/home/Hero";
 import Stats from "@/components/home/Stats";
 import Features from "@/components/home/Features";
 import HowItWorks from "@/components/home/HowItWorks";
+import SubjectCategories from "@/components/home/SubjectCategories";
 import PopularTutors from "@/components/home/PopularTutors";
 import CTA from "@/components/home/CTA";
 
@@ -14,6 +15,7 @@ export default function Home() {
             <main className="flex-1">
                 <Hero />
                 <Stats />
+                <SubjectCategories />
                 <Features />
                 <HowItWorks />
                 <PopularTutors />

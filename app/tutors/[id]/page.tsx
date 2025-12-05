@@ -6,7 +6,9 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, MapPin, Clock, Award, BookOpen, Calendar, MessageSquare, Loader2 } from "lucide-react";
+import { Star, MapPin, Clock, Award, BookOpen, Calendar as CalendarIcon, MessageSquare, Loader2, Video } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import VideoPlayer from "@/components/VideoPlayer";
 import tutorTeaching from "@/assets/tutor-teaching.jpg";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -24,6 +26,7 @@ export default function TutorProfilePage() {
     const [reviews, setReviews] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [bookingId, setBookingId] = useState<string | null>(null);
+    const [date, setDate] = useState<Date | undefined>(new Date());
 
     useEffect(() => {
         if (id) {
@@ -159,13 +162,19 @@ export default function TutorProfilePage() {
                                                 </div>
                                             </div>
                                         </div>
+                                        {tutor.video_url && (
+                                            <div className="mt-8 w-full">
+                                                <h3 className="text-xl font-bold mb-4">Meet {tutor.profiles?.full_name}</h3>
+                                                <VideoPlayer url={tutor.video_url} />
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
-                                            <Calendar className="h-5 w-5" />
+                                            <CalendarIcon className="h-5 w-5" />
                                             Available Sessions
                                         </CardTitle>
                                     </CardHeader>
@@ -180,7 +189,7 @@ export default function TutorProfilePage() {
                                                             <h4 className="font-semibold text-lg">{session.subject}</h4>
                                                             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-muted-foreground mt-2">
                                                                 <span className="flex items-center gap-1">
-                                                                    <Calendar className="h-3 w-3" />
+                                                                    <CalendarIcon className="h-3 w-3" />
                                                                     {format(new Date(session.start_time), 'MMM d, yyyy')}
                                                                 </span>
                                                                 <span className="flex items-center gap-1">
@@ -255,24 +264,54 @@ export default function TutorProfilePage() {
 
                             <div className="space-y-6">
                                 <Card className="sticky top-24">
-                                    <CardContent className="p-6 space-y-4">
+                                    <CardContent className="p-6 space-y-6">
                                         <div className="text-center pb-4 border-b">
                                             <div className="text-4xl font-bold text-primary mb-1">{tutor.hourly_rate || 300} EGP</div>
                                             <div className="text-sm text-muted-foreground">per hour</div>
                                         </div>
 
-                                        <Button className="w-full" variant="outline" size="lg">
+                                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
+                                            <Video className="h-4 w-4" />
+                                            <span>Online via Zoom</span>
+                                        </div>
+
+                                        <div className="border rounded-md p-2 flex justify-center bg-background">
+                                            <Calendar
+                                                mode="single"
+                                                selected={date}
+                                                onSelect={setDate}
+                                                className="rounded-md"
+                                                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <h3 className="font-semibold text-sm">Available Spots</h3>
+                                            {sessions.filter(s => date && new Date(s.start_time).toDateString() === date.toDateString()).length > 0 ? (
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {sessions
+                                                        .filter(s => date && new Date(s.start_time).toDateString() === date.toDateString())
+                                                        .map(session => (
+                                                            <Button
+                                                                key={session.id}
+                                                                variant={bookingId === session.id ? "default" : "outline"}
+                                                                className="w-full text-xs h-9"
+                                                                onClick={() => handleBookSession(session.id)}
+                                                                disabled={bookingId !== null}
+                                                            >
+                                                                {bookingId === session.id ? <Loader2 className="h-3 w-3 animate-spin" /> : format(new Date(session.start_time), 'h:mm a')}
+                                                            </Button>
+                                                        ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-md">No sessions available on this date.</p>
+                                            )}
+                                        </div>
+
+                                        <Button className="w-full" variant="secondary" size="lg">
                                             <MessageSquare className="h-4 w-4 mr-2" />
                                             Send Message
                                         </Button>
-
-                                        <div className="pt-4 border-t">
-                                            <img
-                                                src={tutorTeaching.src}
-                                                alt="Tutor teaching"
-                                                className="w-full rounded-lg"
-                                            />
-                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>
