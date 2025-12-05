@@ -10,10 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, MapPin, Clock, Search } from "lucide-react";
+import { Star, MapPin, Clock, Search, Filter } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Loading from "@/components/ui/loading";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import TutorCard from "@/components/TutorCard";
 
 export default function TutorsPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -72,41 +74,85 @@ export default function TutorsPage() {
 
                 <section className="py-12">
                     <div className="container">
-                        <div className="flex flex-col md:flex-row gap-4 mb-8">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search by name or subject..."
-                                    className="pl-10"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur py-4 -mx-4 px-4 md:static md:bg-transparent md:p-0 mb-8">
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search by name or subject..."
+                                        className="pl-10"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                                <Sheet>
+                                    <SheetTrigger asChild>
+                                        <Button variant="outline" size="icon" className="md:hidden shrink-0">
+                                            <Filter className="h-4 w-4" />
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="bottom" className="h-[50vh]">
+                                        <SheetHeader>
+                                            <SheetTitle>Filters</SheetTitle>
+                                        </SheetHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <Select value={selectedExam} onValueChange={setSelectedExam}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Exam Type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Exams</SelectItem>
+                                                    <SelectItem value="SAT">SAT</SelectItem>
+                                                    <SelectItem value="ACT">ACT</SelectItem>
+                                                    <SelectItem value="EST">EST</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Subject" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Subjects</SelectItem>
+                                                    <SelectItem value="Mathematics">Mathematics</SelectItem>
+                                                    <SelectItem value="English">English</SelectItem>
+                                                    <SelectItem value="Physics">Physics</SelectItem>
+                                                    <SelectItem value="Chemistry">Chemistry</SelectItem>
+                                                    <SelectItem value="Biology">Biology</SelectItem>
+                                                    <SelectItem value="History">History</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
+
+                                <div className="hidden md:flex gap-4">
+                                    <Select value={selectedExam} onValueChange={setSelectedExam}>
+                                        <SelectTrigger className="w-48">
+                                            <SelectValue placeholder="Exam Type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Exams</SelectItem>
+                                            <SelectItem value="SAT">SAT</SelectItem>
+                                            <SelectItem value="ACT">ACT</SelectItem>
+                                            <SelectItem value="EST">EST</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                                        <SelectTrigger className="w-48">
+                                            <SelectValue placeholder="Subject" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Subjects</SelectItem>
+                                            <SelectItem value="Mathematics">Mathematics</SelectItem>
+                                            <SelectItem value="English">English</SelectItem>
+                                            <SelectItem value="Physics">Physics</SelectItem>
+                                            <SelectItem value="Chemistry">Chemistry</SelectItem>
+                                            <SelectItem value="Biology">Biology</SelectItem>
+                                            <SelectItem value="History">History</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                            <Select value={selectedExam} onValueChange={setSelectedExam}>
-                                <SelectTrigger className="w-full md:w-48">
-                                    <SelectValue placeholder="Exam Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Exams</SelectItem>
-                                    <SelectItem value="SAT">SAT</SelectItem>
-                                    <SelectItem value="ACT">ACT</SelectItem>
-                                    <SelectItem value="EST">EST</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                                <SelectTrigger className="w-full md:w-48">
-                                    <SelectValue placeholder="Subject" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Subjects</SelectItem>
-                                    <SelectItem value="Mathematics">Mathematics</SelectItem>
-                                    <SelectItem value="English">English</SelectItem>
-                                    <SelectItem value="Physics">Physics</SelectItem>
-                                    <SelectItem value="Chemistry">Chemistry</SelectItem>
-                                    <SelectItem value="Biology">Biology</SelectItem>
-                                    <SelectItem value="History">History</SelectItem>
-                                </SelectContent>
-                            </Select>
                         </div>
 
                         {loading ? (
@@ -114,35 +160,7 @@ export default function TutorsPage() {
                         ) : (
                             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {filteredTutors.map((tutor) => (
-                                    <Card key={tutor.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 group border-none shadow-md">
-                                        <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
-                                            <div className="relative">
-                                                <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-                                                    <AvatarImage src={tutor.profiles?.avatar_url} className="object-cover" />
-                                                    <AvatarFallback>{tutor.profiles?.full_name?.[0]}</AvatarFallback>
-                                                </Avatar>
-                                                <Badge className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground">
-                                                    {tutor.rating || "5.0"} <Star className="h-3 w-3 ml-1 fill-current" />
-                                                </Badge>
-                                            </div>
-
-                                            <div className="space-y-2 w-full">
-                                                <h3 className="font-bold text-lg truncate">{tutor.profiles?.full_name}</h3>
-                                                <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                                                    {tutor.profiles?.bio || "No bio available"}
-                                                </p>
-                                            </div>
-
-                                            <div className="w-full pt-4 border-t flex items-center justify-between">
-                                                <div className="font-bold text-lg text-primary">
-                                                    {tutor.hourly_rate} <span className="text-xs font-normal text-muted-foreground">EGP/hr</span>
-                                                </div>
-                                                <Button size="sm" asChild>
-                                                    <Link href={`/tutors/${tutor.id}`}>View Profile</Link>
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                    <TutorCard key={tutor.id} tutor={tutor} />
                                 ))}
                             </div>
                         )}

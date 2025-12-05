@@ -132,22 +132,22 @@ export default function TutorProfilePage() {
                         <div className="grid lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-6">
                                 <Card>
-                                    <CardContent className="p-8">
-                                        <div className="flex flex-col md:flex-row gap-6">
+                                    <CardContent className="p-6 md:p-8">
+                                        <div className="flex flex-col items-center text-center md:flex-row md:text-left gap-6">
                                             <img
                                                 src={tutor.profiles?.avatar_url || "https://github.com/shadcn.png"}
                                                 alt={tutor.profiles?.full_name}
-                                                className="w-32 h-32 rounded-full object-cover"
+                                                className="w-32 h-32 rounded-full object-cover border-4 border-background shadow-lg"
                                             />
-                                            <div className="flex-1">
-                                                <div className="flex items-start justify-between mb-4">
+                                            <div className="flex-1 w-full">
+                                                <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-4">
                                                     <div>
                                                         <h1 className="text-3xl font-bold mb-2">{tutor.profiles?.full_name}</h1>
                                                         <p className="text-lg text-muted-foreground mb-3">{tutor.bio || "Tutor"}</p>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-wrap gap-6 text-sm">
+                                                <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6 text-sm">
                                                     <div className="flex items-center gap-2">
                                                         <Star className="h-4 w-4 fill-accent text-accent" />
                                                         <span className="font-semibold">{tutor.rating || 5.0}</span>
@@ -171,14 +171,14 @@ export default function TutorProfilePage() {
                                     </CardHeader>
                                     <CardContent>
                                         {sessions.length === 0 ? (
-                                            <p className="text-muted-foreground">No available sessions at the moment.</p>
+                                            <p className="text-muted-foreground text-center py-4">No available sessions at the moment.</p>
                                         ) : (
                                             <div className="space-y-4">
                                                 {sessions.map((session) => (
-                                                    <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                                                        <div>
-                                                            <h4 className="font-semibold">{session.subject}</h4>
-                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                                                    <div key={session.id} className="flex flex-col md:flex-row items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4">
+                                                        <div className="w-full text-center md:text-left">
+                                                            <h4 className="font-semibold text-lg">{session.subject}</h4>
+                                                            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-muted-foreground mt-2">
                                                                 <span className="flex items-center gap-1">
                                                                     <Calendar className="h-3 w-3" />
                                                                     {format(new Date(session.start_time), 'MMM d, yyyy')}
@@ -193,11 +193,12 @@ export default function TutorProfilePage() {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-4">
+                                                        <div className="flex items-center justify-between w-full md:w-auto gap-4 border-t md:border-t-0 pt-4 md:pt-0">
                                                             <div className="font-bold text-lg">{session.price} EGP</div>
                                                             <Button
                                                                 onClick={() => handleBookSession(session.id)}
                                                                 disabled={bookingId === session.id}
+                                                                className="min-w-[100px]"
                                                             >
                                                                 {bookingId === session.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                                                 Book
@@ -231,8 +232,8 @@ export default function TutorProfilePage() {
                                                                     <Star
                                                                         key={i}
                                                                         className={`h-4 w-4 ${i < review.rating
-                                                                                ? 'fill-yellow-400 text-yellow-400'
-                                                                                : 'text-gray-300'
+                                                                            ? 'fill-yellow-400 text-yellow-400'
+                                                                            : 'text-gray-300'
                                                                             }`}
                                                                     />
                                                                 ))}

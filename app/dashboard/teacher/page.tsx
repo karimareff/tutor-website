@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import RecurringSessionDialog from "@/components/RecurringSessionDialog";
+import SessionList from "@/components/SessionList";
 
 export default function TeacherDashboardPage() {
     const { user } = useAuth();
@@ -193,13 +194,13 @@ export default function TeacherDashboardPage() {
         <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1 container py-8">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
                         <p className="text-muted-foreground">Manage your inventory and schedule</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" asChild>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" size="sm" asChild className="h-9">
                             <Link href="/settings">
                                 <Settings className="h-4 w-4 mr-2" />
                                 Edit Profile
@@ -207,9 +208,9 @@ export default function TeacherDashboardPage() {
                         </Button>
                         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                             <DialogTrigger asChild>
-                                <Button>
+                                <Button size="sm" className="h-9">
                                     <Plus className="h-4 w-4 mr-2" />
-                                    Create Session
+                                    Create
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
@@ -287,11 +288,11 @@ export default function TeacherDashboardPage() {
                 </div>
 
                 <Tabs defaultValue="sessions" className="space-y-6">
-                    <TabsList>
-                        <TabsTrigger value="sessions">My Sessions</TabsTrigger>
-                        <TabsTrigger value="bookings">Booked Students</TabsTrigger>
-                        <TabsTrigger value="reviews">Reviews</TabsTrigger>
-                        <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsList className="grid grid-cols-2 md:inline-flex h-auto md:h-10 w-full md:w-auto gap-2 md:gap-0 p-2 md:p-1 bg-muted/50 md:bg-muted rounded-lg">
+                        <TabsTrigger value="sessions" className="w-full">My Sessions</TabsTrigger>
+                        <TabsTrigger value="bookings" className="w-full">Booked Students</TabsTrigger>
+                        <TabsTrigger value="reviews" className="w-full">Reviews</TabsTrigger>
+                        <TabsTrigger value="overview" className="w-full">Overview</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="space-y-6">
@@ -320,50 +321,15 @@ export default function TeacherDashboardPage() {
                             <CardContent>
                                 {loading ? (
                                     <div>Loading...</div>
-                                ) : sessions.flatMap(s => s.bookings || []).length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        No upcoming bookings yet.
-                                    </div>
                                 ) : (
-                                    <div className="rounded-md border">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-muted/50">
-                                                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Student</th>
-                                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Subject</th>
-                                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date & Time</th>
-                                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Location</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {sessions.flatMap(session =>
-                                                    (session.bookings || []).map((booking: any) => ({
-                                                        ...booking,
-                                                        session // Attach session to booking for display
-                                                    }))
-                                                ).map((booking) => (
-                                                    <tr key={booking.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                                        <td className="p-4 align-middle">
-                                                            <div className="flex flex-col">
-                                                                <span className="font-medium">{booking.students?.full_name || 'Unknown'}</span>
-                                                                <span className="text-xs text-muted-foreground">{booking.students?.email}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4 align-middle">{booking.session.subject}</td>
-                                                        <td className="p-4 align-middle">
-                                                            <div className="flex flex-col">
-                                                                <span>{format(new Date(booking.session.start_time), 'MMM d, yyyy')}</span>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {format(new Date(booking.session.start_time), 'h:mm a')} - {format(new Date(booking.session.end_time), 'h:mm a')}
-                                                                </span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4 align-middle">{booking.session.location}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    <SessionList
+                                        bookings={sessions.flatMap(session =>
+                                            (session.bookings || []).map((booking: any) => ({
+                                                ...booking,
+                                                session
+                                            }))
+                                        )}
+                                    />
                                 )}
                             </CardContent>
                         </Card>
@@ -437,35 +403,35 @@ export default function TeacherDashboardPage() {
                                 ) : (
                                     <div className="space-y-4">
                                         {sessions.map((session) => (
-                                            <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/5 transition-colors">
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <h4 className="font-semibold">{session.subject}</h4>
+                                            <div key={session.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/5 transition-colors gap-4">
+                                                <div className="space-y-2 w-full">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h4 className="font-semibold text-lg">{session.subject}</h4>
                                                         <Badge variant={session.status === 'AVAILABLE' ? 'outline' : 'secondary'} className={session.status === 'AVAILABLE' ? "bg-green-100 text-green-800 hover:bg-green-100 border-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200"}>
                                                             {session.status}
                                                         </Badge>
                                                     </div>
-                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-4 text-sm text-muted-foreground">
                                                         <span className="flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3" />
+                                                            <Calendar className="h-3 w-3 shrink-0" />
                                                             {format(new Date(session.start_time), 'MMM d, yyyy')}
                                                         </span>
                                                         <span className="flex items-center gap-1">
-                                                            <Clock className="h-3 w-3" />
+                                                            <Clock className="h-3 w-3 shrink-0" />
                                                             {format(new Date(session.start_time), 'h:mm a')} - {format(new Date(session.end_time), 'h:mm a')}
                                                         </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <MapPin className="h-3 w-3" />
+                                                        <span className="flex items-center gap-1 col-span-2 md:col-span-1">
+                                                            <MapPin className="h-3 w-3 shrink-0" />
                                                             {session.location}
                                                         </span>
                                                     </div>
                                                     {session.bookings && session.bookings.length > 0 && (
-                                                        <p className="text-sm text-primary">
+                                                        <p className="text-sm text-primary font-medium">
                                                             {session.bookings.length} student{session.bookings.length !== 1 ? 's' : ''} booked
                                                         </p>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
                                                     <div className="font-bold text-lg">{session.price} EGP</div>
                                                     {session.status === 'AVAILABLE' && (
                                                         <Button

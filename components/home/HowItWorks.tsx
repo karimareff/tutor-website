@@ -35,7 +35,7 @@ const HowItWorks = () => {
             Get started in four simple steps
           </p>
         </div>
-        
+
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
             <div key={step.title} className="relative">
@@ -51,7 +51,7 @@ const HowItWorks = () => {
                 <h3 className="font-semibold text-lg mb-3 group-hover:text-primary transition-colors">{step.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
               </div>
-              
+
               {index < steps.length - 1 && (
                 <div className="hidden lg:block absolute top-8 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-0.5">
                   <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
