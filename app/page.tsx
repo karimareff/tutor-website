@@ -1,27 +1,37 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Hero from "@/components/home/Hero";
-import Stats from "@/components/home/Stats";
-import Features from "@/components/home/Features";
-import HowItWorks from "@/components/home/HowItWorks";
+import MobileNav from "@/components/MobileNav";
+import HeroSearch from "@/components/home/HeroSearch";
+import FeaturedTutorsRail from "@/components/home/FeaturedTutorsRail";
 import SubjectCategories from "@/components/home/SubjectCategories";
-import PopularTutors from "@/components/home/PopularTutors";
+import HowItWorks from "@/components/home/HowItWorks";
 import CTA from "@/components/home/CTA";
 
 export default function Home() {
     return (
         <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1">
-                <Hero />
-                <Stats />
+            <main className="flex-1 pb-20 md:pb-0">
+                {/* Search-First Hero */}
+                <HeroSearch />
+
+                {/* Featured Tutors - Above the Fold */}
+                <FeaturedTutorsRail />
+
+                {/* Subject Categories */}
                 <SubjectCategories />
-                <Features />
+
+                {/* How It Works - Simplified */}
                 <HowItWorks />
-                <PopularTutors />
+
+                {/* CTA */}
                 <CTA />
             </main>
             <Footer />
+
+            {/* Mobile Bottom Navigation */}
+            <MobileNav />
         </div>
     );
 }
+

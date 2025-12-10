@@ -5,10 +5,27 @@ import Link from "next/link";
 import { Search, Sparkles, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Hero = () => {
   const [trail, setTrail] = useState<{ x: number; y: number; id: number }[]>([]);
+  const [subject, setSubject] = useState("");
+  const router = useRouter();
   const containerRef = useRef<HTMLElement>(null);
+
+  const handleSearch = () => {
+    if (subject) {
+      router.push(`/tutors?subject=${encodeURIComponent(subject)}`);
+    }
+  };
+
   const counterRef = useRef(0);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
@@ -91,7 +108,7 @@ const Hero = () => {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
+          <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-tight">
             Master Your <br className="hidden md:block" />
             <span className="relative inline-block mx-2">
               <span className="text-gradient">ACT, SAT & EST</span>
@@ -102,7 +119,7 @@ const Hero = () => {
           </h1>
 
           {/* Subheading */}
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Connect with verified, expert tutors who specialize in helping Egyptian students excel.
             <span className="text-foreground font-semibold"> Personalized learning</span>, flexible scheduling, guaranteed results.
           </p>
@@ -110,16 +127,31 @@ const Hero = () => {
           {/* Search & CTA */}
           <div className="flex flex-col items-center gap-8 pt-8 w-full">
             {/* Large Search Bar */}
-            <div className="w-full max-w-2xl relative z-20">
+            <div className="w-full max-w-2xl relative z-20 px-4 md:px-0">
               <div className="relative flex items-center group">
-                <Search className="absolute left-5 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <Input
-                  placeholder="What do you want to learn? (e.g. SAT, Math, Physics)"
-                  className="w-full h-16 pl-14 pr-32 rounded-full text-lg bg-background/95 backdrop-blur-xl border-primary/20 focus:border-primary/50 shadow-2xl shadow-primary/5 transition-all"
-                />
-                <div className="absolute right-2 top-2 bottom-2">
-                  <Button size="lg" className="h-full rounded-full px-8 shadow-lg">
-                    Search
+                <div className="absolute left-5 z-10 pointer-events-none">
+                  <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                </div>
+
+                <Select onValueChange={(value) => setSubject(value)}>
+                  <SelectTrigger className="w-full h-16 pl-14 pr-32 rounded-full text-lg bg-background/95 backdrop-blur-xl border-primary/20 focus:border-primary/50 shadow-2xl shadow-primary/5 transition-all">
+                    <SelectValue placeholder="What do you want to learn?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IGCSE Math">IGCSE Math</SelectItem>
+                    <SelectItem value="SAT English">SAT English</SelectItem>
+                    <SelectItem value="Physics">Physics</SelectItem>
+                    <SelectItem value="Chemistry">Chemistry</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="absolute right-2 top-2 bottom-2 z-10">
+                  <Button
+                    size="lg"
+                    className="h-full rounded-full px-8 shadow-lg"
+                    onClick={handleSearch}
+                  >
+                    Find Tutors
                   </Button>
                 </div>
               </div>

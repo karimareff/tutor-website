@@ -128,8 +128,8 @@ export default function StudentDashboardPage() {
             <main className="flex-1 container py-8">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold">My Dashboard</h1>
-                        <p className="text-muted-foreground">Manage your lessons and learning journey</p>
+                        <h1 className="text-3xl font-bold text-slate-900">My Dashboard</h1>
+                        <p className="text-slate-500">Manage your lessons and learning journey</p>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline">
@@ -151,7 +151,7 @@ export default function StudentDashboardPage() {
                             <Loading />
                         ) : upcomingLessons.length === 0 ? (
                             <Card>
-                                <CardContent className="p-6 text-center text-muted-foreground">
+                                <CardContent className="p-6 text-center text-slate-500">
                                     No upcoming lessons. Browse tutors to book a session.
                                 </CardContent>
                             </Card>
@@ -164,10 +164,10 @@ export default function StudentDashboardPage() {
                                                 <Badge variant={lesson.status === 'BOOKED' ? 'default' : 'secondary'}>
                                                     {lesson.status}
                                                 </Badge>
-                                                <span className="text-sm text-muted-foreground">{lesson.location}</span>
+                                                <span className="text-sm text-slate-500">{lesson.location}</span>
                                             </div>
-                                            <h3 className="text-xl font-semibold mb-1">{lesson.subject}</h3>
-                                            <p className="text-muted-foreground">with {lesson.tutors?.profiles?.full_name}</p>
+                                            <h3 className="text-xl font-semibold mb-1 text-slate-900">{lesson.subject}</h3>
+                                            <p className="text-slate-500">with {lesson.tutors?.profiles?.full_name}</p>
                                         </div>
 
                                         <div className="flex items-center gap-6 text-sm">
@@ -212,7 +212,7 @@ export default function StudentDashboardPage() {
                                 <Loading />
                             ) : pastLessons.length === 0 ? (
                                 <Card>
-                                    <CardContent className="p-6 text-center text-muted-foreground">
+                                    <CardContent className="p-6 text-center text-slate-500">
                                         No past lessons.
                                     </CardContent>
                                 </Card>
@@ -224,8 +224,8 @@ export default function StudentDashboardPage() {
                                         <Card key={lesson.id}>
                                             <CardContent className="p-6 flex items-center justify-between">
                                                 <div>
-                                                    <h3 className="font-semibold">{lesson.subject}</h3>
-                                                    <p className="text-sm text-muted-foreground">
+                                                    <h3 className="font-semibold text-slate-900">{lesson.subject}</h3>
+                                                    <p className="text-sm text-slate-500">
                                                         with {lesson.tutors?.profiles?.full_name} • {format(new Date(lesson.start_time), 'MMM d, yyyy')}
                                                     </p>
                                                 </div>
@@ -251,7 +251,7 @@ export default function StudentDashboardPage() {
 
                     <TabsContent value="messages">
                         <Card>
-                            <CardContent className="p-12 text-center text-muted-foreground">
+                            <CardContent className="p-12 text-center text-slate-500">
                                 <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-20" />
                                 <p>No new messages</p>
                             </CardContent>

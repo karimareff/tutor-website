@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 export default function TutorProfilePage() {
     const params = useParams();
+    const router = useRouter();
     const id = params?.id as string;
     const { user } = useAuth();
 
@@ -84,7 +85,7 @@ export default function TutorProfilePage() {
 
     const handleBookSession = async (sessionId: string) => {
         if (!user) {
-            toast.error("Please login to book a session");
+            router.push(`/login?next=/tutors/${id}`);
             return;
         }
 
@@ -145,8 +146,8 @@ export default function TutorProfilePage() {
                                             <div className="flex-1 w-full">
                                                 <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-4">
                                                     <div>
-                                                        <h1 className="text-3xl font-bold mb-2">{tutor.profiles?.full_name}</h1>
-                                                        <p className="text-lg text-muted-foreground mb-3">{tutor.bio || "Tutor"}</p>
+                                                        <h1 className="text-3xl font-bold mb-2 text-slate-900">{tutor.profiles?.full_name}</h1>
+                                                        <p className="text-lg text-slate-500 mb-3">{tutor.bio || "Tutor"}</p>
                                                     </div>
                                                 </div>
 
@@ -155,7 +156,7 @@ export default function TutorProfilePage() {
                                                         <Star className="h-4 w-4 fill-accent text-accent" />
                                                         <span className="font-semibold">{tutor.rating || 5.0}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <div className="flex items-center gap-2 text-slate-500">
                                                         <MapPin className="h-4 w-4" />
                                                         Cairo, Egypt
                                                     </div>
@@ -173,7 +174,7 @@ export default function TutorProfilePage() {
 
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
+                                        <CardTitle className="flex items-center gap-2 text-slate-900">
                                             <CalendarIcon className="h-5 w-5" />
                                             Available Sessions
                                         </CardTitle>
@@ -184,10 +185,10 @@ export default function TutorProfilePage() {
                                         ) : (
                                             <div className="space-y-4">
                                                 {sessions.map((session) => (
-                                                    <div key={session.id} className="flex flex-col md:flex-row items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4">
+                                                    <div key={session.id} className="flex flex-col md:flex-row items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors gap-4">
                                                         <div className="w-full text-center md:text-left">
                                                             <h4 className="font-semibold text-lg">{session.subject}</h4>
-                                                            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-muted-foreground mt-2">
+                                                            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-slate-500 mt-2">
                                                                 <span className="flex items-center gap-1">
                                                                     <CalendarIcon className="h-3 w-3" />
                                                                     {format(new Date(session.start_time), 'MMM d, yyyy')}
@@ -207,7 +208,7 @@ export default function TutorProfilePage() {
                                                             <Button
                                                                 onClick={() => handleBookSession(session.id)}
                                                                 disabled={bookingId === session.id}
-                                                                className="min-w-[100px]"
+                                                                className="min-w-[100px] bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
                                                             >
                                                                 {bookingId === session.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                                                 Book
@@ -265,12 +266,12 @@ export default function TutorProfilePage() {
                             <div className="space-y-6">
                                 <Card className="sticky top-24">
                                     <CardContent className="p-6 space-y-6">
-                                        <div className="text-center pb-4 border-b">
+                                        <div className="text-center pb-4 border-b border-slate-200">
                                             <div className="text-4xl font-bold text-primary mb-1">{tutor.hourly_rate || 300} EGP</div>
-                                            <div className="text-sm text-muted-foreground">per hour</div>
+                                            <div className="text-sm text-slate-500">per hour</div>
                                         </div>
 
-                                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
+                                        <div className="flex items-center justify-center gap-2 text-sm text-slate-500 bg-slate-50 p-2 rounded-md">
                                             <Video className="h-4 w-4" />
                                             <span>Online via Zoom</span>
                                         </div>
@@ -308,7 +309,7 @@ export default function TutorProfilePage() {
                                             )}
                                         </div>
 
-                                        <Button className="w-full" variant="secondary" size="lg">
+                                        <Button className="w-full bg-white border border-slate-300 text-slate-700 hover:bg-slate-50" variant="outline" size="lg">
                                             <MessageSquare className="h-4 w-4 mr-2" />
                                             Send Message
                                         </Button>

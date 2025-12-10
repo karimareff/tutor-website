@@ -31,26 +31,26 @@ export default function HowItWorksPage() {
         <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1">
-                <section className="py-20 bg-muted/50">
+                <section className="py-20 bg-slate-50">
                     <div className="container text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-6">How It Works</h1>
-                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900">How It Works</h1>
+                        <p className="text-xl text-slate-500 max-w-2xl mx-auto">
                             Getting started is easy. Follow these simple steps to begin your learning journey.
                         </p>
                     </div>
                 </section>
 
-                <section className="py-20">
+                <section className="py-20 bg-white">
                     <div className="container">
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {steps.map((step, index) => (
-                                <Card key={index} className="relative">
+                                <Card key={index} className="relative border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                     <CardContent className="pt-6 text-center">
-                                        <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
+                                        <div className="h-16 w-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600">
                                             <step.icon className="h-8 w-8" />
                                         </div>
-                                        <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                                        <p className="text-muted-foreground">{step.description}</p>
+                                        <h3 className="text-xl font-bold mb-3 text-slate-900">{step.title}</h3>
+                                        <p className="text-slate-500">{step.description}</p>
                                     </CardContent>
                                 </Card>
                             ))}

@@ -25,13 +25,13 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-20">
+    <section className="py-20 bg-slate-50">
       <div className="container">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">
             How It Works
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             Get started in four simple steps
           </p>
         </div>
@@ -41,21 +41,21 @@ const HowItWorks = () => {
             <div key={step.title} className="relative">
               <div className="flex flex-col items-center text-center group hover:scale-105 transition-transform">
                 <div className="relative mb-6">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-[var(--shadow-glow)] group-hover:shadow-[var(--shadow-medium)] transition-shadow animate-[gradient_3s_ease_infinite] bg-[length:200%_auto]">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 via-emerald-400 to-blue-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
                     <step.icon className="h-9 w-9 text-white" />
                   </div>
-                  <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold shadow-lg ring-4 ring-background">
+                  <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center text-sm font-bold shadow-lg ring-4 ring-slate-50 border border-slate-100">
                     {index + 1}
                   </div>
                 </div>
-                <h3 className="font-semibold text-lg mb-3 group-hover:text-primary transition-colors">{step.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+                <h3 className="font-semibold text-lg mb-3 text-slate-900 group-hover:text-primary transition-colors">{step.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{step.description}</p>
               </div>
 
               {index < steps.length - 1 && (
                 <div className="hidden lg:block absolute top-8 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-0.5">
-                  <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <div className="w-full h-full border-t-2 border-dashed border-muted-foreground/30" />
+                  <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
+                  <div className="w-full h-full border-t-2 border-dashed border-slate-200" />
                 </div>
               )}
             </div>

@@ -13,18 +13,18 @@ const PopularTutors = async () => {
     .limit(6);
 
   return (
-    <section className="py-20 bg-muted/50">
+    <section className="py-20 bg-slate-50">
       <div className="container">
         <div className="flex items-center justify-between mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+            <h2 className="text-3xl md:text-4xl font-bold mb-2 text-slate-900">
               Popular Tutors
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-slate-500">
               Meet some of our highest-rated tutors
             </p>
           </div>
-          <Button variant="outline" asChild className="hidden md:flex">
+          <Button variant="outline" asChild className="hidden md:flex bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
             <Link href="/tutors">View All Tutors</Link>
           </Button>
         </div>
@@ -35,7 +35,7 @@ const PopularTutors = async () => {
               <TutorCard key={tutor.id} tutor={tutor} />
             ))
           ) : (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
+            <div className="col-span-full text-center py-12 text-slate-500">
               No tutors found.
             </div>
           )}

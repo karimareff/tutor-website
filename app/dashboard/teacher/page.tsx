@@ -208,8 +208,8 @@ export default function TeacherDashboardPage() {
             <main className="flex-1 container py-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
-                        <p className="text-muted-foreground">Manage your inventory and schedule</p>
+                        <h1 className="text-3xl font-bold text-slate-900">Teacher Dashboard</h1>
+                        <p className="text-slate-500">Manage your inventory and schedule</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Button variant="outline" size="sm" asChild className="h-9">
@@ -245,7 +245,7 @@ export default function TeacherDashboardPage() {
                                                         <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                                                     ))
                                                 ) : (
-                                                    <div className="p-2 text-sm text-muted-foreground text-center">
+                                                    <div className="p-2 text-sm text-slate-500 text-center">
                                                         No subjects found. Please update your profile.
                                                     </div>
                                                 )}
@@ -314,7 +314,7 @@ export default function TeacherDashboardPage() {
                 </div>
 
                 <Tabs defaultValue="sessions" className="space-y-6">
-                    <TabsList className="grid grid-cols-2 md:inline-flex h-auto md:h-10 w-full md:w-auto gap-2 md:gap-0 p-2 md:p-1 bg-muted/50 md:bg-muted rounded-lg">
+                    <TabsList className="grid grid-cols-2 md:inline-flex h-auto md:h-10 w-full md:w-auto gap-2 md:gap-0 p-2 md:p-1 bg-slate-100 rounded-lg">
                         <TabsTrigger value="sessions" className="w-full">My Sessions</TabsTrigger>
                         <TabsTrigger value="bookings" className="w-full">Booked Students</TabsTrigger>
                         <TabsTrigger value="reviews" className="w-full">Reviews</TabsTrigger>
@@ -327,8 +327,8 @@ export default function TeacherDashboardPage() {
                                 <Card key={stat.label}>
                                     <CardContent className="p-6 flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                                            <h3 className="text-2xl font-bold">{stat.value}</h3>
+                                            <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                                            <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
                                         </div>
                                         <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                             <stat.icon className="h-6 w-6" />
@@ -373,7 +373,7 @@ export default function TeacherDashboardPage() {
                                 {loading ? (
                                     <div>Loading...</div>
                                 ) : reviews.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
+                                    <div className="text-center py-8 text-slate-500">
                                         No reviews yet. Students will be able to review you after completing sessions.
                                     </div>
                                 ) : (
@@ -382,8 +382,8 @@ export default function TeacherDashboardPage() {
                                             <div key={review.id} className="border-b pb-4 last:border-0">
                                                 <div className="flex items-start justify-between mb-2">
                                                     <div>
-                                                        <div className="font-semibold">{review.students?.full_name || 'Student'}</div>
-                                                        <div className="text-sm text-muted-foreground">{review.sessions?.subject || 'Session'}</div>
+                                                        <div className="font-semibold text-slate-900">{review.students?.full_name || 'Student'}</div>
+                                                        <div className="text-sm text-slate-500">{review.sessions?.subject || 'Session'}</div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex">
@@ -401,9 +401,9 @@ export default function TeacherDashboardPage() {
                                                     </div>
                                                 </div>
                                                 {review.comment && (
-                                                    <p className="text-sm text-muted-foreground mb-2">{review.comment}</p>
+                                                    <p className="text-sm text-slate-500 mb-2">{review.comment}</p>
                                                 )}
-                                                <p className="text-xs text-muted-foreground">
+                                                <p className="text-xs text-slate-400">
                                                     {format(new Date(review.created_at), 'MMM d, yyyy')}
                                                 </p>
                                             </div>
@@ -423,7 +423,7 @@ export default function TeacherDashboardPage() {
                                 {loading ? (
                                     <div>Loading...</div>
                                 ) : sessions.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
+                                    <div className="text-center py-8 text-slate-500">
                                         No sessions created yet. Create one to get started!
                                     </div>
                                 ) : (
@@ -432,12 +432,12 @@ export default function TeacherDashboardPage() {
                                             <div key={session.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/5 transition-colors gap-4">
                                                 <div className="space-y-2 w-full">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <h4 className="font-semibold text-lg">{session.subject}</h4>
+                                                        <h4 className="font-semibold text-lg text-slate-900">{session.subject}</h4>
                                                         <Badge variant={session.status === 'AVAILABLE' ? 'outline' : 'secondary'} className={session.status === 'AVAILABLE' ? "bg-green-100 text-green-800 hover:bg-green-100 border-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200"}>
                                                             {session.status}
                                                         </Badge>
                                                     </div>
-                                                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-4 text-sm text-muted-foreground">
+                                                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-4 text-sm text-slate-500">
                                                         <span className="flex items-center gap-1">
                                                             <Calendar className="h-3 w-3 shrink-0" />
                                                             {format(new Date(session.start_time), 'MMM d, yyyy')}
@@ -457,8 +457,8 @@ export default function TeacherDashboardPage() {
                                                         </p>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
-                                                    <div className="font-bold text-lg">{session.price} EGP</div>
+                                                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto border-t border-slate-100 md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
+                                                    <div className="font-bold text-lg text-slate-900">{session.price} EGP</div>
                                                     {session.status === 'AVAILABLE' && (
                                                         <Button
                                                             variant="ghost"

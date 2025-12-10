@@ -14,9 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface ProfileFormProps {
     user: any;
     onUpdate?: () => void;
+    embedded?: boolean;
 }
 
-export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
+export default function ProfileForm({ user, onUpdate, embedded = false }: ProfileFormProps) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({
@@ -150,143 +151,155 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         }
     };
 
+    const FormContent = (
+        <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center gap-4">
+                <Avatar className="h-24 w-24 border border-slate-200">
+                    <AvatarImage src={formData.avatar_url} />
+                    <AvatarFallback className="bg-slate-100 text-slate-500"><UserIcon className="h-12 w-12" /></AvatarFallback>
+                </Avatar>
+                <div className="flex items-center gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                    >
+                        {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Change Avatar
+                    </Button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
+                </div>
+            </div>
+
+            <div className="grid gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="full_name" className="text-slate-700">Full Name</Label>
+                    <Input
+                        id="full_name"
+                        value={formData.full_name}
+                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        placeholder="Your Name"
+                        className="bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                    />
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="bio" className="text-slate-700">Bio</Label>
+                    <Textarea
+                        id="bio"
+                        value={formData.bio}
+                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                        placeholder="Tell students about yourself..."
+                        className="min-h-[100px] bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                    />
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="hourly_rate" className="text-slate-700">Hourly Rate (EGP)</Label>
+                    <Input
+                        id="hourly_rate"
+                        type="number"
+                        value={formData.hourly_rate}
+                        onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
+                        placeholder="300"
+                        className="bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                    />
+                </div>
+
+                <div className="space-y-3">
+                    <Label className="text-slate-700">Curriculum</Label>
+                    <div className="flex flex-wrap gap-4">
+                        {AVAILABLE_CURRICULUMS.map((curr) => (
+                            <div key={curr} className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    id={`curr-${curr}`}
+                                    checked={formData.curriculums.includes(curr)}
+                                    onChange={(e) => {
+                                        const updated = e.target.checked
+                                            ? [...formData.curriculums, curr]
+                                            : formData.curriculums.filter(c => c !== curr);
+                                        setFormData({ ...formData, curriculums: updated });
+                                    }}
+                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <Label htmlFor={`curr-${curr}`} className="font-normal cursor-pointer text-slate-700">{curr}</Label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <Label className="text-slate-700">Subjects</Label>
+                    <div className="flex flex-wrap gap-2">
+                        {AVAILABLE_SUBJECTS.map((subject) => {
+                            const isSelected = formData.subjects.includes(subject);
+                            return (
+                                <div
+                                    key={subject}
+                                    onClick={() => {
+                                        const updated = isSelected
+                                            ? formData.subjects.filter(s => s !== subject)
+                                            : [...formData.subjects, subject];
+                                        setFormData({ ...formData, subjects: updated });
+                                    }}
+                                    className={`cursor-pointer px-3 py-1.5 rounded-full text-sm border transition-colors ${isSelected
+                                        ? "bg-blue-600 text-white border-blue-600"
+                                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                                        }`}
+                                >
+                                    {subject}
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <p className="text-xs text-slate-500">Select all the subjects you are qualified to teach.</p>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="video_url" className="text-slate-700">Introduction Video (Optional)</Label>
+                    <Input
+                        id="video_url"
+                        value={formData.video_url}
+                        onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                    />
+                    <p className="text-sm text-slate-500">Paste a YouTube link here to show students who you are.</p>
+                </div>
+            </div>
+
+            <div className="flex justify-end">
+                <Button type="submit" disabled={loading || uploading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Changes
+                </Button>
+            </div>
+        </form>
+    );
+
+    if (embedded) {
+        return FormContent;
+    }
+
     return (
-        <Card>
+        <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader>
-                <CardTitle>Edit Profile</CardTitle>
-                <CardDescription>Update your public profile and settings</CardDescription>
+                <CardTitle className="text-slate-900">Edit Profile</CardTitle>
+                <CardDescription className="text-slate-500">Update your public profile and settings</CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Avatar Upload */}
-                    <div className="flex flex-col items-center gap-4">
-                        <Avatar className="h-24 w-24">
-                            <AvatarImage src={formData.avatar_url} />
-                            <AvatarFallback><UserIcon className="h-12 w-12" /></AvatarFallback>
-                        </Avatar>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={uploading}
-                            >
-                                {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-                                Change Avatar
-                            </Button>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="full_name">Full Name</Label>
-                            <Input
-                                id="full_name"
-                                value={formData.full_name}
-                                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                placeholder="Your Name"
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="bio">Bio</Label>
-                            <Textarea
-                                id="bio"
-                                value={formData.bio}
-                                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                placeholder="Tell students about yourself..."
-                                className="min-h-[100px]"
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="hourly_rate">Hourly Rate (EGP)</Label>
-                            <Input
-                                id="hourly_rate"
-                                type="number"
-                                value={formData.hourly_rate}
-                                onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
-                                placeholder="300"
-                            />
-                        </div>
-
-                        <div className="space-y-3">
-                            <Label>Curriculum</Label>
-                            <div className="flex flex-wrap gap-4">
-                                {AVAILABLE_CURRICULUMS.map((curr) => (
-                                    <div key={curr} className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id={`curr-${curr}`}
-                                            checked={formData.curriculums.includes(curr)}
-                                            onChange={(e) => {
-                                                const updated = e.target.checked
-                                                    ? [...formData.curriculums, curr]
-                                                    : formData.curriculums.filter(c => c !== curr);
-                                                setFormData({ ...formData, curriculums: updated });
-                                            }}
-                                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                        />
-                                        <Label htmlFor={`curr-${curr}`} className="font-normal cursor-pointer">{curr}</Label>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <Label>Subjects</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {AVAILABLE_SUBJECTS.map((subject) => {
-                                    const isSelected = formData.subjects.includes(subject);
-                                    return (
-                                        <div
-                                            key={subject}
-                                            onClick={() => {
-                                                const updated = isSelected
-                                                    ? formData.subjects.filter(s => s !== subject)
-                                                    : [...formData.subjects, subject];
-                                                setFormData({ ...formData, subjects: updated });
-                                            }}
-                                            className={`cursor-pointer px-3 py-1.5 rounded-full text-sm border transition-colors ${isSelected
-                                                ? "bg-primary text-primary-foreground border-primary"
-                                                : "bg-background hover:bg-muted"
-                                                }`}
-                                        >
-                                            {subject}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <p className="text-xs text-muted-foreground">Select all the subjects you are qualified to teach.</p>
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="video_url">Introduction Video (Optional)</Label>
-                            <Input
-                                id="video_url"
-                                value={formData.video_url}
-                                onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                                placeholder="https://www.youtube.com/watch?v=..."
-                            />
-                            <p className="text-sm text-muted-foreground">Paste a YouTube link here to show students who you are.</p>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                        <Button type="submit" disabled={loading || uploading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Changes
-                        </Button>
-                    </div>
-                </form>
+                {FormContent}
             </CardContent>
         </Card>
     );

@@ -83,79 +83,79 @@ export default function AdminDashboardPage() {
     return (
         <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1 container py-8">
+            <main className="flex-1 container py-8 bg-slate-50">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                        <p className="text-muted-foreground">System overview and management</p>
+                        <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+                        <p className="text-slate-500">System overview and management</p>
                     </div>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-6 mb-8">
-                    <Card>
+                    <Card className="bg-white border-slate-200 shadow-sm">
                         <CardContent className="p-6 flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-                                <h3 className="text-2xl font-bold">{stats.totalUsers}</h3>
+                                <p className="text-sm font-medium text-slate-500">Total Users</p>
+                                <h3 className="text-2xl font-bold text-slate-900">{stats.totalUsers}</h3>
                             </div>
-                            <Users className="h-8 w-8 text-primary opacity-20" />
+                            <Users className="h-8 w-8 text-blue-600 opacity-20" />
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-white border-slate-200 shadow-sm">
                         <CardContent className="p-6 flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Total Bookings</p>
-                                <h3 className="text-2xl font-bold">{stats.totalBookings}</h3>
+                                <p className="text-sm font-medium text-slate-500">Total Bookings</p>
+                                <h3 className="text-2xl font-bold text-slate-900">{stats.totalBookings}</h3>
                             </div>
-                            <Calendar className="h-8 w-8 text-primary opacity-20" />
+                            <Calendar className="h-8 w-8 text-blue-600 opacity-20" />
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-white border-slate-200 shadow-sm">
                         <CardContent className="p-6 flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                                <h3 className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} EGP</h3>
+                                <p className="text-sm font-medium text-slate-500">Total Revenue</p>
+                                <h3 className="text-2xl font-bold text-slate-900">{stats.totalRevenue.toLocaleString()} EGP</h3>
                             </div>
-                            <DollarSign className="h-8 w-8 text-primary opacity-20" />
+                            <DollarSign className="h-8 w-8 text-blue-600 opacity-20" />
                         </CardContent>
                     </Card>
                 </div>
 
                 <Tabs defaultValue="users" className="space-y-6">
-                    <TabsList>
-                        <TabsTrigger value="users">Users</TabsTrigger>
-                        <TabsTrigger value="settings">System Settings</TabsTrigger>
+                    <TabsList className="bg-slate-100">
+                        <TabsTrigger value="users" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Users</TabsTrigger>
+                        <TabsTrigger value="settings" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">System Settings</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="users">
-                        <Card>
+                        <Card className="bg-white border-slate-200 shadow-sm">
                             <CardHeader>
-                                <CardTitle>User Management</CardTitle>
+                                <CardTitle className="text-slate-900">User Management</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 {loading ? (
                                     <Loading />
                                 ) : (
-                                    <div className="rounded-md border">
+                                    <div className="rounded-md border border-slate-200">
                                         <table className="w-full text-sm">
                                             <thead>
-                                                <tr className="border-b bg-muted/50">
-                                                    <th className="p-4 text-left font-medium">Name</th>
-                                                    <th className="p-4 text-left font-medium">Role</th>
-                                                    <th className="p-4 text-left font-medium">Joined</th>
-                                                    <th className="p-4 text-right font-medium">Actions</th>
+                                                <tr className="border-b border-slate-200 bg-slate-50">
+                                                    <th className="p-4 text-left font-medium text-slate-700">Name</th>
+                                                    <th className="p-4 text-left font-medium text-slate-700">Role</th>
+                                                    <th className="p-4 text-left font-medium text-slate-700">Joined</th>
+                                                    <th className="p-4 text-right font-medium text-slate-700">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {users.map((user) => (
-                                                    <tr key={user.id} className="border-b last:border-0">
-                                                        <td className="p-4 font-medium">{user.full_name || 'N/A'}</td>
+                                                    <tr key={user.id} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+                                                        <td className="p-4 font-medium text-slate-900">{user.full_name || 'N/A'}</td>
                                                         <td className="p-4">
-                                                            <Badge variant={user.role === 'tutor' ? 'default' : 'secondary'}>
+                                                            <Badge variant={user.role === 'tutor' ? 'default' : 'secondary'} className={user.role === 'tutor' ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"}>
                                                                 {user.role}
                                                             </Badge>
                                                         </td>
-                                                        <td className="p-4 text-muted-foreground">
+                                                        <td className="p-4 text-slate-500">
                                                             {new Date(user.created_at).toLocaleDateString()}
                                                         </td>
                                                         <td className="p-4 text-right">
@@ -179,20 +179,20 @@ export default function AdminDashboardPage() {
                     </TabsContent>
 
                     <TabsContent value="settings">
-                        <Card>
+                        <Card className="bg-white border-slate-200 shadow-sm">
                             <CardHeader>
-                                <CardTitle>System Settings</CardTitle>
+                                <CardTitle className="text-slate-900">System Settings</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border rounded-lg">
+                                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg bg-slate-50/50">
                                     <div className="flex items-center gap-4">
-                                        <Shield className="h-6 w-6 text-primary" />
+                                        <Shield className="h-6 w-6 text-blue-600" />
                                         <div>
-                                            <h4 className="font-semibold">Maintenance Mode</h4>
-                                            <p className="text-sm text-muted-foreground">Disable access for non-admins</p>
+                                            <h4 className="font-semibold text-slate-900">Maintenance Mode</h4>
+                                            <p className="text-sm text-slate-500">Disable access for non-admins</p>
                                         </div>
                                     </div>
-                                    <Button variant="outline">Enable</Button>
+                                    <Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-100">Enable</Button>
                                 </div>
                             </CardContent>
                         </Card>

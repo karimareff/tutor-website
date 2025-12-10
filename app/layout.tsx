@@ -7,8 +7,8 @@ import MobileNav from '@/components/MobileNav'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-    title: 'Tutor Website - Find Your Perfect Tutor',
-    description: 'Connect with qualified tutors for SAT, ACT, IGCSE and more',
+    title: 'TutorHub Egypt - Find Your Perfect Tutor',
+    description: 'Connect with qualified tutors for SAT, ACT, IGCSE and more in Egypt',
 }
 
 export const viewport: Viewport = {
@@ -24,8 +24,8 @@ export default function RootLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="en" suppressHydrationWarning>
-            <body className={`${inter.className} overflow-x-hidden`}>
+        <html lang="en">
+            <body className={`${inter.className} antialiased overflow-x-hidden bg-background text-foreground`}>
                 <Providers>
                     {children}
                     <MobileNav />
@@ -34,3 +34,4 @@ export default function RootLayout({
         </html>
     )
 }
+
