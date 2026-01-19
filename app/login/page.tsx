@@ -62,12 +62,32 @@ export default function LoginPage() {
 
                 toast.success('Logged in successfully');
 
+                // Check for next redirect
+                const next = searchParams.get('next');
+                if (next) {
+                    router.push(next);
+                    return;
+                }
+
                 if (profile?.role === 'tutor') {
                     router.push('/dashboard/teacher');
                 } else if (profile?.role === 'admin') {
                     router.push('/dashboard/admin');
                 } else {
-                    router.push('/dashboard/student');
+                    // For students, check how many tutors they're linked to
+                    const { count } = await supabase
+                        .from('student_tutors')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('student_id', user.id)
+                        .eq('status', 'ACTIVE');
+
+                    if (count && count > 1) {
+                        // Multiple tutors - show selection page
+                        router.push('/student/select-tutor');
+                    } else {
+                        // 0 or 1 tutor - go directly to dashboard
+                        router.push('/dashboard/student');
+                    }
                 }
             }
         } catch (error: any) {

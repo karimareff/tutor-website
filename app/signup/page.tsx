@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,20 @@ import { GraduationCap, Book, Presentation, ArrowLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function SignupPage() {
-    const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState<'role' | 'form'>('role');
-    const [selectedRole, setSelectedRole] = useState<'student' | 'tutor'>('student');
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Get query params
+    const roleParam = searchParams?.get('role');
+    const nextParam = searchParams?.get('next');
+
+    // Determine initial state
+    const initialRole = roleParam === 'student' || roleParam === 'tutor' ? roleParam : 'student';
+    const initialStep = roleParam ? 'form' : 'role';
+
+    const [loading, setLoading] = useState(false);
+    const [step, setStep] = useState<'role' | 'form'>(initialStep);
+    const [selectedRole, setSelectedRole] = useState<'student' | 'tutor'>(initialRole);
 
     const handleRoleSelect = (role: 'student' | 'tutor') => {
         setSelectedRole(role);
@@ -48,11 +58,18 @@ export default function SignupPage() {
 
             if (data.session) {
                 toast.success('Account created successfully!');
-                // Redirect based on role
+
+                // Priority redirect: "next" param (e.g. invite link)
+                if (nextParam) {
+                    router.push(nextParam);
+                    return;
+                }
+
+                // Default redirects
                 if (selectedRole === 'tutor') {
                     router.push('/dashboard/onboarding');
                 } else {
-                    router.push('/tutors'); // Or home '/'
+                    router.push('/dashboard/student');
                 }
             } else {
                 // Email confirmation enabled
@@ -81,32 +98,10 @@ export default function SignupPage() {
                         <p className="text-slate-500 text-lg">Choose how you want to get started</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                        {/* Student Card */}
+                    <div className="flex flex-col items-center max-w-md mx-auto">
+                        {/* Tutor Card Only - Centered */}
                         <Card
-                            className="cursor-pointer border-slate-200 hover:border-blue-500 hover:shadow-xl transition-all duration-300 group relative overflow-hidden bg-white rounded-2xl"
-                            onClick={() => handleRoleSelect('student')}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <CardContent className="p-8 flex flex-col items-center text-center h-full justify-center space-y-6 relative z-10">
-                                <div className="h-20 w-20 rounded-full bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                    <Book className="h-10 w-10 text-blue-600" />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold mb-2 text-slate-900">I am a Student</h3>
-                                    <p className="text-slate-500">
-                                        Find expert tutors, book sessions, and master your subjects.
-                                    </p>
-                                </div>
-                                <Button variant="outline" className="w-full mt-auto border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors">
-                                    Join as Student
-                                </Button>
-                            </CardContent>
-                        </Card>
-
-                        {/* Tutor Card */}
-                        <Card
-                            className="cursor-pointer border-slate-200 hover:border-emerald-500 hover:shadow-xl transition-all duration-300 group relative overflow-hidden bg-white rounded-2xl"
+                            className="cursor-pointer border-slate-200 hover:border-emerald-500 hover:shadow-xl transition-all duration-300 group relative overflow-hidden bg-white rounded-2xl w-full"
                             onClick={() => handleRoleSelect('tutor')}
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -125,6 +120,13 @@ export default function SignupPage() {
                                 </Button>
                             </CardContent>
                         </Card>
+
+                        <div className="mt-8 text-center bg-blue-50 p-4 rounded-lg border border-blue-100 max-w-sm">
+                            <p className="font-semibold text-blue-900 mb-1">Are you a Student?</p>
+                            <p className="text-sm text-blue-700">
+                                Students can only join via an <strong>Invite Link</strong> sent by a tutor.
+                            </p>
+                        </div>
                     </div>
 
                     <div className="mt-10 text-center">

@@ -19,11 +19,6 @@ const MobileNav = () => {
             icon: Home,
         },
         {
-            href: "/tutors",
-            label: "Search",
-            icon: Search,
-        },
-        {
             href: user ? "/my-bookings" : "/login",
             label: "Bookings",
             icon: Calendar,

@@ -19,7 +19,6 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4 text-slate-900">Students</h4>
             <ul className="space-y-2 text-sm text-slate-500">
-              <li><Link href="/tutors" className="hover:text-primary transition-colors">Find Tutors</Link></li>
               <li><Link href="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
               <li><Link href="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
             </ul>

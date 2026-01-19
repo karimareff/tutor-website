@@ -4,35 +4,36 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Users, DollarSign, Star, Plus, Clock, MapPin, Trash2, Settings } from "lucide-react";
+import {
+    Plus, Calendar, Clock, FileText, BrainCircuit, Users,
+    Copy, ArrowRight, CheckCircle2, Sparkles, AlertCircle
+} from "lucide-react";
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { format, isToday, startOfDay, endOfDay } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
-import RecurringSessionDialog from "@/components/RecurringSessionDialog";
-import SessionList from "@/components/SessionList";
 
 export default function TeacherDashboardPage() {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        totalEarnings: 0,
-        totalStudents: 0,
-        averageRating: 5.0,
-    });
-    const [sessions, setSessions] = useState<any[]>([]);
-    const [reviews, setReviews] = useState<any[]>([]);
+    const [tutorSlug, setTutorSlug] = useState<string | null>(null);
+    const [tutorSubjects, setTutorSubjects] = useState<string[]>([]);
 
-    // Create Session Form State
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    // Action Data
+    const [todaySessions, setTodaySessions] = useState<any[]>([]);
+    const [pendingSubmissions, setPendingSubmissions] = useState<any[]>([]);
+    const [dueTodayAssignments, setDueTodayAssignments] = useState<any[]>([]);
+    const [recentActivity, setRecentActivity] = useState<any[]>([]);
+    const [studentsCount, setStudentsCount] = useState(0);
+    const [inactiveStudentsCount, setInactiveStudentsCount] = useState(0);
+
+    // Quick Create Session Dialog
+    const [isSessionDialogOpen, setIsSessionDialogOpen] = useState(false);
     const [newSession, setNewSession] = useState({
         subject: "",
         price: "",
@@ -41,99 +42,140 @@ export default function TeacherDashboardPage() {
         endTime: "",
         location: "online"
     });
-    const [tutorSubjects, setTutorSubjects] = useState<string[]>([]);
 
     useEffect(() => {
         if (user) {
+            if (user?.user_metadata?.role === 'student') {
+                window.location.href = '/dashboard/student';
+                return;
+            }
             fetchDashboardData();
         }
     }, [user]);
 
     const fetchDashboardData = async () => {
         try {
-            console.log('=== Fetching dashboard data for tutor:', user?.id);
+            const today = new Date();
+            const todayStart = startOfDay(today).toISOString();
+            const todayEnd = endOfDay(today).toISOString();
 
-            // Fetch all sessions for this tutor
-            const { data: sessionsData, error } = await supabase
-                .from('sessions')
-                .select(`
-                    *,
-                    bookings (
-                        *,
-                        students:profiles!bookings_student_id_fkey (*)
-                    )
-                `)
-                .eq('tutor_id', user?.id)
-                .order('start_time', { ascending: true });
-
-            console.log('=== Sessions query result:', { sessionsData, error });
-
-            if (error) throw error;
-
-            setSessions(sessionsData || []);
-
-            // Calculate stats
-            const completedSessions = sessionsData?.filter(s => s.status === 'COMPLETED') || [];
-
-            // Calculate unique students from all bookings
-            const allBookings = sessionsData?.flatMap(s => s.bookings || []) || [];
-            console.log('=== All bookings:', allBookings);
-
-            const uniqueStudents = new Set(allBookings.map((b: any) => b.student_id));
-
-            // Calculate earnings
-            const earnings = allBookings.reduce((acc: number, curr: any) => {
-                const session = sessionsData?.find(s => s.id === curr.session_id);
-                return acc + (session?.price || 0);
-            }, 0);
-
-            console.log('=== Stats calculated:', {
-                totalEarnings: earnings,
-                totalStudents: uniqueStudents.size,
-                sessionsCount: sessionsData?.length
-            });
-
-            // Fetch reviews for this tutor
-            const { data: reviewsData, error: reviewsError } = await supabase
-                .from('reviews')
-                .select(`
-                    *,
-                    students:profiles!reviews_student_id_fkey (full_name),
-                    sessions (subject)
-                `)
-                .eq('tutor_id', user?.id)
-                .order('created_at', { ascending: false });
-
-            if (reviewsError) {
-                console.error('Error fetching reviews:', reviewsError);
-            } else {
-                setReviews(reviewsData || []);
-            }
-
-            // Calculate actual average rating from reviews
-            const avgRating = reviewsData && reviewsData.length > 0
-                ? reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length
-                : 5.0;
-
-            setStats({
-                totalEarnings: earnings,
-                totalStudents: uniqueStudents.size,
-                averageRating: Number(avgRating.toFixed(1)),
-            });
-
-            // Fetch tutor subjects for the dropdown
+            // Fetch tutor profile
             const { data: tutorData } = await supabase
                 .from('tutors')
-                .select('subjects')
+                .select('slug, subjects')
                 .eq('id', user?.id)
                 .single();
 
-            if (tutorData?.subjects) {
-                setTutorSubjects(tutorData.subjects);
+            if (tutorData) {
+                setTutorSlug(tutorData.slug);
+                setTutorSubjects(tutorData.subjects || []);
             }
+
+            // 1. Today's Sessions
+            const { data: sessionsData } = await supabase
+                .from('sessions')
+                .select(`
+                    id, subject, start_time, end_time, location, status,
+                    bookings (
+                        id,
+                        students:profiles!bookings_student_id_fkey (full_name)
+                    )
+                `)
+                .eq('tutor_id', user?.id)
+                .gte('start_time', todayStart)
+                .lte('start_time', todayEnd)
+                .order('start_time', { ascending: true });
+
+            setTodaySessions(sessionsData || []);
+
+            // 2. Pending Submissions (needs grading)
+            const { data: submissionsData } = await supabase
+                .from('assignment_submissions')
+                .select(`
+                    id, submitted_at, grade,
+                    assignments!inner(id, title, tutor_id),
+                    students:profiles!assignment_submissions_student_id_fkey(full_name)
+                `)
+                .eq('assignments.tutor_id', user?.id)
+                .is('grade', null)
+                .order('submitted_at', { ascending: false })
+                .limit(10);
+
+            setPendingSubmissions(submissionsData || []);
+
+            // 3. Assignments Due Today
+            const { data: dueTodayData } = await supabase
+                .from('assignments')
+                .select('id, title, due_date')
+                .eq('tutor_id', user?.id)
+                .gte('due_date', todayStart)
+                .lte('due_date', todayEnd);
+
+            setDueTodayAssignments(dueTodayData || []);
+
+            // 4. Students count
+            const { count: studentsTotal } = await supabase
+                .from('student_tutors')
+                .select('*', { count: 'exact', head: true })
+                .eq('tutor_id', user?.id);
+
+            setStudentsCount(studentsTotal || 0);
+
+            // 5. Recent Activity (bookings, submissions)
+            const activities: any[] = [];
+
+            // Recent bookings
+            const { data: recentBookings } = await supabase
+                .from('bookings')
+                .select(`
+                    id, created_at,
+                    sessions!inner(subject, tutor_id),
+                    students:profiles!bookings_student_id_fkey(full_name)
+                `)
+                .eq('sessions.tutor_id', user?.id)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            recentBookings?.forEach(b => {
+                const students = b.students as any;
+                const sessions = b.sessions as any;
+                const studentName = Array.isArray(students) ? students[0]?.full_name : students?.full_name;
+                const sessionSubject = Array.isArray(sessions) ? sessions[0]?.subject : sessions?.subject;
+
+                activities.push({
+                    id: `booking-${b.id}`,
+                    type: 'booking',
+                    message: `${studentName || 'A student'} booked ${sessionSubject}`,
+                    time: b.created_at,
+                    link: '/dashboard/teacher/sessions'
+                });
+            });
+
+            // Recent submissions
+            submissionsData?.slice(0, 5).forEach(s => {
+                const students = s.students as any;
+                const assignments = s.assignments as any;
+
+                const studentName = Array.isArray(students) ? students[0]?.full_name : students?.full_name;
+                const assignmentTitle = Array.isArray(assignments) ? assignments[0]?.title : assignments?.title;
+                const assignmentId = Array.isArray(assignments) ? assignments[0]?.id : assignments?.id;
+
+                activities.push({
+                    id: `submission-${s.id}`,
+                    type: 'submission',
+                    message: `${studentName || 'A student'} submitted ${assignmentTitle}`,
+                    time: s.submitted_at,
+                    link: `/dashboard/teacher/assignments/${assignmentId}`
+                });
+            });
+
+            // Sort by time
+            activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+            setRecentActivity(activities.slice(0, 6));
+
         } catch (error: any) {
-            console.error('=== Error fetching dashboard data:', JSON.stringify(error, null, 2));
-            toast.error('Failed to load dashboard data: ' + (error.message || 'Unknown error'));
+            console.error('Error fetching dashboard data:', error);
+            toast.error('Failed to load dashboard data');
         } finally {
             setLoading(false);
         }
@@ -164,322 +206,284 @@ export default function TeacherDashboardPage() {
             if (error) throw error;
 
             toast.success("Session created successfully");
-            setIsCreateOpen(false);
+            setIsSessionDialogOpen(false);
             fetchDashboardData();
-            setNewSession({
-                subject: "",
-                price: "",
-                date: "",
-                startTime: "",
-                endTime: "",
-                location: "online"
-            });
+            setNewSession({ subject: "", price: "", date: "", startTime: "", endTime: "", location: "online" });
         } catch (error: any) {
             toast.error(error.message || "Failed to create session");
         }
     };
 
-    const handleDeleteSession = async (sessionId: string) => {
-        if (!confirm("Are you sure you want to delete this session?")) return;
-
-        try {
-            const { error } = await supabase
-                .from('sessions')
-                .delete()
-                .eq('id', sessionId);
-
-            if (error) throw error;
-            toast.success("Session deleted");
-            fetchDashboardData();
-        } catch (error: any) {
-            toast.error("Failed to delete session");
+    const copyJoinLink = () => {
+        if (!tutorSlug) {
+            toast.error("Set up your profile first to get a join link");
+            return;
         }
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        const link = `${origin}/join/${tutorSlug}`;
+        navigator.clipboard.writeText(link);
+        toast.success("Join link copied to clipboard!");
     };
 
-    const STAT_CARDS = [
-        { label: "Total Earnings", value: `${stats.totalEarnings.toLocaleString()} EGP`, icon: DollarSign },
-        { label: "Total Students", value: stats.totalStudents.toString(), icon: Users },
-        { label: "Average Rating", value: stats.averageRating.toFixed(1), icon: Star },
-    ];
+    const hasTodayItems = todaySessions.length > 0 || dueTodayAssignments.length > 0;
 
     return (
-        <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1 container py-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Teacher Dashboard</h1>
-                        <p className="text-slate-500">Manage your inventory and schedule</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="outline" size="sm" asChild className="h-9">
-                            <Link href="/settings">
-                                <Settings className="h-4 w-4 mr-2" />
-                                Edit Profile
-                            </Link>
+        <div className="space-y-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+                <p className="text-slate-500">Welcome back! Here's what needs your attention.</p>
+            </div>
+
+            {/* Quick Actions Bar */}
+            <div className="flex flex-wrap gap-3 p-4 bg-white rounded-lg border shadow-sm">
+                <Dialog open={isSessionDialogOpen} onOpenChange={setIsSessionDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Add Session
                         </Button>
-                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                            <DialogTrigger asChild>
-                                <Button size="sm" className="h-9">
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Create
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Create New Session</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid gap-2">
-                                        <Label>Subject</Label>
-                                        <Select
-                                            value={newSession.subject}
-                                            onValueChange={(val) => setNewSession({ ...newSession, subject: val })}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a subject" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {tutorSubjects.length > 0 ? (
-                                                    tutorSubjects.map((subject) => (
-                                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                                                    ))
-                                                ) : (
-                                                    <div className="p-2 text-sm text-slate-500 text-center">
-                                                        No subjects found. Please update your profile.
-                                                    </div>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Price (EGP)</Label>
-                                        <Input
-                                            type="number"
-                                            value={newSession.price}
-                                            onChange={(e) => setNewSession({ ...newSession, price: e.target.value })}
-                                            placeholder="300"
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Date</Label>
-                                        <Input
-                                            type="date"
-                                            value={newSession.date}
-                                            onChange={(e) => setNewSession({ ...newSession, date: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label>Start Time</Label>
-                                            <Input
-                                                type="time"
-                                                value={newSession.startTime}
-                                                onChange={(e) => setNewSession({ ...newSession, startTime: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>End Time</Label>
-                                            <Input
-                                                type="time"
-                                                value={newSession.endTime}
-                                                onChange={(e) => setNewSession({ ...newSession, endTime: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Location</Label>
-                                        <Select
-                                            value={newSession.location}
-                                            onValueChange={(val) => setNewSession({ ...newSession, location: val })}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="online">Online</SelectItem>
-                                                <SelectItem value="in-person">In Person</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <Button onClick={handleCreateSession} className="w-full mt-4">Create Session</Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                        <RecurringSessionDialog
-                            tutorId={user?.id || ''}
-                            onSessionsCreated={fetchDashboardData}
-                        />
-                    </div>
-                </div>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create New Session</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                                <Label>Subject</Label>
+                                <Select value={newSession.subject} onValueChange={(val) => setNewSession({ ...newSession, subject: val })}>
+                                    <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+                                    <SelectContent>{tutorSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Price (EGP)</Label>
+                                <Input type="number" value={newSession.price} onChange={(e) => setNewSession({ ...newSession, price: e.target.value })} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Date</Label>
+                                <Input type="date" value={newSession.date} onChange={(e) => setNewSession({ ...newSession, date: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2"><Label>Start</Label><Input type="time" value={newSession.startTime} onChange={(e) => setNewSession({ ...newSession, startTime: e.target.value })} /></div>
+                                <div className="grid gap-2"><Label>End</Label><Input type="time" value={newSession.endTime} onChange={(e) => setNewSession({ ...newSession, endTime: e.target.value })} /></div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Location</Label>
+                                <Select value={newSession.location} onValueChange={(val) => setNewSession({ ...newSession, location: val })}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent><SelectItem value="online">Online</SelectItem><SelectItem value="in-person">In Person</SelectItem></SelectContent>
+                                </Select>
+                            </div>
+                            <Button onClick={handleCreateSession}>Create Session</Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
-                <Tabs defaultValue="sessions" className="space-y-6">
-                    <TabsList className="grid grid-cols-2 md:inline-flex h-auto md:h-10 w-full md:w-auto gap-2 md:gap-0 p-2 md:p-1 bg-slate-100 rounded-lg">
-                        <TabsTrigger value="sessions" className="w-full">My Sessions</TabsTrigger>
-                        <TabsTrigger value="bookings" className="w-full">Booked Students</TabsTrigger>
-                        <TabsTrigger value="reviews" className="w-full">Reviews</TabsTrigger>
-                        <TabsTrigger value="overview" className="w-full">Overview</TabsTrigger>
-                    </TabsList>
+                <Button variant="outline" className="gap-2" asChild>
+                    <Link href="/dashboard/teacher/assignments">
+                        <Plus className="h-4 w-4" />
+                        Add Assignment
+                    </Link>
+                </Button>
 
-                    <TabsContent value="overview" className="space-y-6">
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {STAT_CARDS.map((stat) => (
-                                <Card key={stat.label}>
-                                    <CardContent className="p-6 flex items-center justify-between">
+                <Button variant="outline" className="gap-2" asChild>
+                    <Link href="/dashboard/teacher/quizzes">
+                        <Plus className="h-4 w-4" />
+                        Create Quiz
+                    </Link>
+                </Button>
+
+                <Button variant="outline" className="gap-2" onClick={copyJoinLink}>
+                    <Users className="h-4 w-4" />
+                    Invite Students
+                </Button>
+            </div>
+
+            {/* Today Section */}
+            <Card className="border-l-4 border-l-blue-500">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-blue-500" />
+                        Today
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                        <div className="text-center py-4 text-slate-400">Loading...</div>
+                    ) : !hasTodayItems ? (
+                        <div className="text-center py-6">
+                            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-3">
+                                <CheckCircle2 className="h-6 w-6 text-green-600" />
+                            </div>
+                            <p className="text-slate-600 font-medium">You're all caught up today! 🎉</p>
+                            <p className="text-sm text-slate-400 mt-1">No sessions or deadlines scheduled for today.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {todaySessions.map(session => (
+                                <div key={session.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <Clock className="h-5 w-5 text-blue-600" />
+                                        </div>
                                         <div>
-                                            <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                                            <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
+                                            <p className="font-medium text-slate-900">{session.subject}</p>
+                                            <p className="text-sm text-slate-500">
+                                                {format(new Date(session.start_time), 'h:mm a')}
+                                                {session.bookings?.length > 0 && ` • ${session.bookings[0].students?.full_name}`}
+                                            </p>
                                         </div>
-                                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                            <stat.icon className="h-6 w-6" />
+                                    </div>
+                                    <Badge variant={session.status === 'BOOKED' ? 'default' : 'outline'}>
+                                        {session.status}
+                                    </Badge>
+                                </div>
+                            ))}
+                            {dueTodayAssignments.map(assignment => (
+                                <div key={assignment.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                                            <FileText className="h-5 w-5 text-orange-600" />
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                        <div>
+                                            <p className="font-medium text-slate-900">{assignment.title}</p>
+                                            <p className="text-sm text-slate-500">Due today at {format(new Date(assignment.due_date), 'h:mm a')}</p>
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="sm" asChild>
+                                        <Link href={`/dashboard/teacher/assignments/${assignment.id}`}>
+                                            View <ArrowRight className="h-3 w-3 ml-1" />
+                                        </Link>
+                                    </Button>
+                                </div>
                             ))}
                         </div>
-                    </TabsContent>
+                    )}
+                </CardContent>
+            </Card>
 
-                    <TabsContent value="bookings">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Upcoming Booked Sessions</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {loading ? (
-                                    <div>Loading...</div>
-                                ) : (
-                                    <SessionList
-                                        bookings={sessions.flatMap(session =>
-                                            (session.bookings || []).map((booking: any) => ({
-                                                ...booking,
-                                                session
-                                            }))
-                                        )}
-                                    />
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+            {/* Action Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Submissions to Review */}
+                <Card className={`cursor-pointer hover:shadow-md transition-shadow ${pendingSubmissions.length > 0 ? 'border-orange-200 bg-orange-50/50' : ''}`}>
+                    <Link href="/dashboard/teacher/assignments" className="block">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${pendingSubmissions.length > 0 ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'}`}>
+                                        <FileText className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-500">Submissions to Review</p>
+                                        <p className="text-2xl font-bold text-slate-900">{pendingSubmissions.length}</p>
+                                    </div>
+                                </div>
+                                <ArrowRight className="h-5 w-5 text-slate-400" />
+                            </div>
+                        </CardContent>
+                    </Link>
+                </Card>
 
-                    <TabsContent value="reviews">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Star className="h-5 w-5" />
-                                    Student Reviews ({reviews.length})
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {loading ? (
-                                    <div>Loading...</div>
-                                ) : reviews.length === 0 ? (
-                                    <div className="text-center py-8 text-slate-500">
-                                        No reviews yet. Students will be able to review you after completing sessions.
+                {/* Students */}
+                <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                    <Link href="/dashboard/teacher/students" className="block">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                                        <Users className="h-5 w-5" />
                                     </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {reviews.map((review) => (
-                                            <div key={review.id} className="border-b pb-4 last:border-0">
-                                                <div className="flex items-start justify-between mb-2">
-                                                    <div>
-                                                        <div className="font-semibold text-slate-900">{review.students?.full_name || 'Student'}</div>
-                                                        <div className="text-sm text-slate-500">{review.sessions?.subject || 'Session'}</div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <Star
-                                                                    key={i}
-                                                                    className={`h-4 w-4 ${i < review.rating
-                                                                        ? 'fill-yellow-400 text-yellow-400'
-                                                                        : 'text-gray-300'
-                                                                        }`}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-sm font-medium">{review.rating}/5</span>
-                                                    </div>
-                                                </div>
-                                                {review.comment && (
-                                                    <p className="text-sm text-slate-500 mb-2">{review.comment}</p>
-                                                )}
-                                                <p className="text-xs text-slate-400">
-                                                    {format(new Date(review.created_at), 'MMM d, yyyy')}
-                                                </p>
-                                            </div>
-                                        ))}
+                                    <div>
+                                        <p className="text-sm text-slate-500">Your Students</p>
+                                        <p className="text-2xl font-bold text-slate-900">{studentsCount}</p>
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                                </div>
+                                <ArrowRight className="h-5 w-5 text-slate-400" />
+                            </div>
+                        </CardContent>
+                    </Link>
+                </Card>
 
-                    <TabsContent value="sessions">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Session Inventory</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {loading ? (
-                                    <div>Loading...</div>
-                                ) : sessions.length === 0 ? (
-                                    <div className="text-center py-8 text-slate-500">
-                                        No sessions created yet. Create one to get started!
+                {/* Quizzes */}
+                <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                    <Link href="/dashboard/teacher/quizzes" className="block">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                        <BrainCircuit className="h-5 w-5" />
                                     </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {sessions.map((session) => (
-                                            <div key={session.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/5 transition-colors gap-4">
-                                                <div className="space-y-2 w-full">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <h4 className="font-semibold text-lg text-slate-900">{session.subject}</h4>
-                                                        <Badge variant={session.status === 'AVAILABLE' ? 'outline' : 'secondary'} className={session.status === 'AVAILABLE' ? "bg-green-100 text-green-800 hover:bg-green-100 border-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200"}>
-                                                            {session.status}
-                                                        </Badge>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-4 text-sm text-slate-500">
-                                                        <span className="flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3 shrink-0" />
-                                                            {format(new Date(session.start_time), 'MMM d, yyyy')}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock className="h-3 w-3 shrink-0" />
-                                                            {format(new Date(session.start_time), 'h:mm a')} - {format(new Date(session.end_time), 'h:mm a')}
-                                                        </span>
-                                                        <span className="flex items-center gap-1 col-span-2 md:col-span-1">
-                                                            <MapPin className="h-3 w-3 shrink-0" />
-                                                            {session.location}
-                                                        </span>
-                                                    </div>
-                                                    {session.bookings && session.bookings.length > 0 && (
-                                                        <p className="text-sm text-primary font-medium">
-                                                            {session.bookings.length} student{session.bookings.length !== 1 ? 's' : ''} booked
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto border-t border-slate-100 md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
-                                                    <div className="font-bold text-lg text-slate-900">{session.price} EGP</div>
-                                                    {session.status === 'AVAILABLE' && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="text-destructive hover:text-destructive/90"
-                                                            onClick={() => handleDeleteSession(session.id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div>
+                                        <p className="text-sm text-slate-500">Manage Quizzes</p>
+                                        <p className="text-lg font-medium text-slate-700">View All →</p>
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-            </main>
-            <Footer />
+                                </div>
+                                <ArrowRight className="h-5 w-5 text-slate-400" />
+                            </div>
+                        </CardContent>
+                    </Link>
+                </Card>
+            </div>
+
+            {/* Empty State for No Students */}
+            {studentsCount === 0 && !loading && (
+                <Card className="border-dashed border-2 bg-slate-50/50">
+                    <CardContent className="py-8 text-center">
+                        <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                            <Users className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h3 className="font-semibold text-slate-900 mb-1">No Students Yet</h3>
+                        <p className="text-sm text-slate-500 mb-4">Share your invite link to start building your class roster.</p>
+                        <Button onClick={copyJoinLink} className="gap-2">
+                            <Copy className="h-4 w-4" />
+                            Copy Invite Link
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Recent Activity */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-slate-500" />
+                        Recent Activity
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                        <div className="text-center py-4 text-slate-400">Loading...</div>
+                    ) : recentActivity.length === 0 ? (
+                        <div className="text-center py-6 text-slate-400">
+                            <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>No recent activity yet</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {recentActivity.map((activity) => (
+                                <Link
+                                    key={activity.id}
+                                    href={activity.link}
+                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${activity.type === 'submission' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                                            }`}>
+                                            {activity.type === 'submission' ? <FileText className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-slate-700">{activity.message}</p>
+                                            <p className="text-xs text-slate-400">{format(new Date(activity.time), 'MMM d, h:mm a')}</p>
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }
