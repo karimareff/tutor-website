@@ -145,7 +145,13 @@ export default function LoginPage() {
 
                     <div className="mt-6 text-center text-sm">
                         <span className="text-slate-500">Don't have an account? </span>
-                        <Link href="/signup" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline">
+                        <Link
+                            href={searchParams?.get('next')
+                                ? `/signup?next=${encodeURIComponent(searchParams.get('next')!)}&role=student`
+                                : "/signup"
+                            }
+                            className="text-blue-600 font-semibold hover:text-blue-700 hover:underline"
+                        >
                             Sign up
                         </Link>
                     </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Clock, Trash2, Loader2, MapPin } from "lucide-react";
+import { Plus, Calendar, Clock, Trash2, Loader2, MapPin, Pencil } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -21,13 +21,16 @@ export default function SessionsPage() {
     const [tutorSubjects, setTutorSubjects] = useState<string[]>([]);
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingSession, setEditingSession] = useState<any>(null);
     const [newSession, setNewSession] = useState({
         subject: "",
         price: "",
         date: "",
         startTime: "",
         endTime: "",
-        location: "online"
+        location: "online",
+        capacity: "1",
+        meetingUrl: ""
     });
 
     useEffect(() => {
@@ -73,7 +76,30 @@ export default function SessionsPage() {
         }
     };
 
-    const handleCreateSession = async () => {
+    const handleOpenCreate = () => {
+        setEditingSession(null);
+        setNewSession({ subject: "", price: "", date: "", startTime: "", endTime: "", location: "online", capacity: "1", meetingUrl: "" });
+        setIsDialogOpen(true);
+    };
+
+    const handleOpenEdit = (session: any) => {
+        setEditingSession(session);
+        const startDate = new Date(session.start_time);
+        const endDate = new Date(session.end_time);
+        setNewSession({
+            subject: session.subject,
+            price: session.price.toString(),
+            date: startDate.toISOString().split('T')[0],
+            startTime: startDate.toTimeString().slice(0, 5),
+            endTime: endDate.toTimeString().slice(0, 5),
+            location: session.location,
+            capacity: session.capacity?.toString() || "1",
+            meetingUrl: session.meeting_url || ""
+        });
+        setIsDialogOpen(true);
+    };
+
+    const handleSaveSession = async () => {
         try {
             if (!newSession.subject || !newSession.price || !newSession.date || !newSession.startTime || !newSession.endTime) {
                 toast.error("Please fill in all fields");
@@ -83,26 +109,39 @@ export default function SessionsPage() {
             const startDateTime = new Date(`${newSession.date}T${newSession.startTime}`);
             const endDateTime = new Date(`${newSession.date}T${newSession.endTime}`);
 
-            const { error } = await supabase
-                .from('sessions')
-                .insert({
-                    tutor_id: user?.id,
-                    subject: newSession.subject,
-                    price: parseInt(newSession.price),
-                    location: newSession.location,
-                    start_time: startDateTime.toISOString(),
-                    end_time: endDateTime.toISOString(),
-                    status: 'AVAILABLE'
-                });
+            const sessionData = {
+                tutor_id: user?.id,
+                subject: newSession.subject,
+                price: parseInt(newSession.price),
+                location: newSession.location,
+                capacity: parseInt(newSession.capacity),
+                start_time: startDateTime.toISOString(),
+                end_time: endDateTime.toISOString(),
+                meeting_url: newSession.meetingUrl || null,
+                status: editingSession ? editingSession.status : 'AVAILABLE'
+            };
 
-            if (error) throw error;
+            if (editingSession) {
+                const { error } = await supabase
+                    .from('sessions')
+                    .update(sessionData)
+                    .eq('id', editingSession.id);
+                if (error) throw error;
+                toast.success("Session updated successfully");
+            } else {
+                const { error } = await supabase
+                    .from('sessions')
+                    .insert(sessionData);
+                if (error) throw error;
+                toast.success("Session created successfully");
+            }
 
-            toast.success("Session created successfully");
             setIsDialogOpen(false);
+            setEditingSession(null);
             fetchData();
-            setNewSession({ subject: "", price: "", date: "", startTime: "", endTime: "", location: "online" });
+            setNewSession({ subject: "", price: "", date: "", startTime: "", endTime: "", location: "online", capacity: "1", meetingUrl: "" });
         } catch (error: any) {
-            toast.error(error.message || "Failed to create session");
+            toast.error(error.message || "Failed to save session");
         }
     };
 
@@ -128,16 +167,16 @@ export default function SessionsPage() {
                     <h1 className="text-2xl font-bold text-slate-900">Sessions</h1>
                     <p className="text-slate-500">Manage your tutoring sessions</p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingSession(null); }}>
                     <DialogTrigger asChild>
-                        <Button>
+                        <Button onClick={handleOpenCreate}>
                             <Plus className="h-4 w-4 mr-2" />
                             Create Session
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Create New Session</DialogTitle>
+                            <DialogTitle>{editingSession ? "Edit Session" : "Create New Session"}</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
@@ -160,13 +199,27 @@ export default function SessionsPage() {
                                 <div className="grid gap-2"><Label>End</Label><Input type="time" value={newSession.endTime} onChange={(e) => setNewSession({ ...newSession, endTime: e.target.value })} /></div>
                             </div>
                             <div className="grid gap-2">
+                                <Label>Capacity (Students)</Label>
+                                <Input type="number" min="1" value={newSession.capacity} onChange={(e) => setNewSession({ ...newSession, capacity: e.target.value })} />
+                            </div>
+                            <div className="grid gap-2">
                                 <Label>Location</Label>
                                 <Select value={newSession.location} onValueChange={(val) => setNewSession({ ...newSession, location: val })}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent><SelectItem value="online">Online</SelectItem><SelectItem value="in-person">In Person</SelectItem></SelectContent>
                                 </Select>
                             </div>
-                            <Button onClick={handleCreateSession}>Create Session</Button>
+                            {newSession.location === 'online' && (
+                                <div className="grid gap-2">
+                                    <Label>Meeting Link (Optional)</Label>
+                                    <Input
+                                        placeholder="https://zoom.us/j/..."
+                                        value={newSession.meetingUrl}
+                                        onChange={(e) => setNewSession({ ...newSession, meetingUrl: e.target.value })}
+                                    />
+                                </div>
+                            )}
+                            <Button onClick={handleSaveSession}>{editingSession ? "Update Session" : "Create Session"}</Button>
                         </div>
                     </DialogContent>
                 </Dialog>
@@ -213,9 +266,12 @@ export default function SessionsPage() {
                                                             {session.location}
                                                         </span>
                                                     </div>
-                                                    {session.bookings?.length > 0 && (
-                                                        <p className="text-sm text-slate-600 mt-1">
-                                                            Booked by {session.bookings[0].students?.full_name}
+                                                    <p className="text-sm text-slate-600 mt-1">
+                                                        {session.bookings?.length || 0}/{session.capacity || 1} spots filled
+                                                    </p>
+                                                    {session.bookings?.length > 0 && session.bookings.length <= 3 && (
+                                                        <p className="text-xs text-slate-500 mt-1">
+                                                            Students: {session.bookings.map((b: any) => b.students?.full_name).filter(Boolean).join(', ')}
                                                         </p>
                                                     )}
                                                 </div>
@@ -224,11 +280,21 @@ export default function SessionsPage() {
                                                 <Badge variant={session.status === 'BOOKED' ? 'default' : 'outline'}>
                                                     {session.status}
                                                 </Badge>
-                                                {session.status === 'AVAILABLE' && (
-                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteSession(session.id)}>
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                <div className="flex gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleOpenEdit(session)}
+                                                        title="Edit session"
+                                                    >
+                                                        <Pencil className="h-4 w-4 text-slate-600" />
                                                     </Button>
-                                                )}
+                                                    {session.status === 'AVAILABLE' && (
+                                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteSession(session.id)}>
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>

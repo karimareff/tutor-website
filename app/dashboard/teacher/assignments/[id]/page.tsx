@@ -11,6 +11,10 @@ import { Loader2, Calendar, FileText, ArrowLeft, User, ExternalLink } from "luci
 import { format } from "date-fns";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function GuideAssignmentPage() {
     const { id } = useParams();
@@ -133,19 +137,59 @@ export default function GuideAssignmentPage() {
                                                 <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold shrink-0">
                                                     {sub.students?.full_name?.[0] || <User className="h-5 w-5" />}
                                                 </div>
-                                                <div>
+                                                <div className="flex-1">
                                                     <div className="font-medium">{sub.students?.full_name || "Unknown Student"}</div>
                                                     <div className="text-xs text-slate-500">Submitted {format(new Date(sub.submitted_at), "MMM d, h:mm a")}</div>
+                                                    {sub.student_response && (
+                                                        <div className="mt-2 p-2 bg-slate-50 rounded border text-sm">
+                                                            <p className="font-medium text-slate-700 mb-1">Student Response:</p>
+                                                            <p className="text-slate-600 whitespace-pre-wrap line-clamp-3">{sub.student_response}</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
                                             <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3 sm:items-center">
-                                                {/* Future: Add Grading UI here */}
-                                                {sub.grade ? (
-                                                    <Badge variant="outline" className="justify-center">Grade: {sub.grade}</Badge>
-                                                ) : (
-                                                    <Badge variant="secondary" className="justify-center">Needs Grading</Badge>
-                                                )}
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                                                            {sub.grade ? `Grade: ${sub.grade}` : "Grade"}
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Grade Submission</DialogTitle>
+                                                        </DialogHeader>
+                                                        <form onSubmit={async (e) => {
+                                                            e.preventDefault();
+                                                            const formData = new FormData(e.currentTarget);
+                                                            const grade = formData.get('grade');
+                                                            const feedback = formData.get('feedback');
+
+                                                            const { error } = await supabase
+                                                                .from('assignment_submissions')
+                                                                .update({ grade: grade, feedback: feedback })
+                                                                .eq('id', sub.id);
+
+                                                            if (error) {
+                                                                toast.error("Failed to grade");
+                                                            } else {
+                                                                toast.success("Graded successfully");
+                                                                fetchData();
+                                                            }
+                                                        }} className="space-y-4">
+                                                            <div className="grid gap-2">
+                                                                <Label>Grade (0-100)</Label>
+                                                                <Input name="grade" type="number" min="0" max="100" defaultValue={sub.grade || ""} required />
+                                                            </div>
+                                                            <div className="grid gap-2">
+                                                                <Label>Feedback</Label>
+                                                                <Textarea name="feedback" defaultValue={sub.feedback || ""} placeholder="Good work..." />
+                                                            </div>
+                                                            <Button type="submit">Save Grade</Button>
+                                                        </form>
+                                                    </DialogContent>
+                                                </Dialog>
 
                                                 {sub.file_url ? (
                                                     <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
@@ -158,9 +202,9 @@ export default function GuideAssignmentPage() {
                                                     <Button variant="ghost" size="sm" disabled className="w-full sm:w-auto">No File</Button>
                                                 )}
 
-                                                {sub.comments && (
-                                                    <Button variant="ghost" size="sm" onClick={() => toast.info(sub.comments)} className="w-full sm:w-auto">
-                                                        View Note
+                                                {sub.feedback && (
+                                                    <Button variant="ghost" size="sm" onClick={() => toast.info(sub.feedback)} className="w-full sm:w-auto">
+                                                        View Feedback
                                                     </Button>
                                                 )}
                                             </div>

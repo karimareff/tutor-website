@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Plus, Loader2, BrainCircuit, Trash2, MoreVertical, Pencil, Eye, EyeOff, Calendar } from "lucide-react";
+import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -372,7 +373,9 @@ export default function QuizzesPage() {
                                         }`}>
                                         {quiz.status}
                                     </span>
-                                    <Button variant="outline" size="sm" disabled>View Results</Button>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/dashboard/teacher/quizzes/${quiz.id}`}>View Results</Link>
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>

@@ -33,8 +33,9 @@ export default function StudentSessionsPage() {
                         id,
                         subject,
                         start_time,
-                        duration,
+                        end_time,
                         meeting_url,
+                        duration,
                         tutors(profiles(full_name))
                     )
                 `)

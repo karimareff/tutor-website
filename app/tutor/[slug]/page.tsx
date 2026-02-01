@@ -28,12 +28,7 @@ export default async function TutorPublicPage({ params }: { params: { slug: stri
         notFound();
     }
 
-    // Fetch Reviews
-    const { data: reviews } = await supabase
-        .from('reviews')
-        .select('rating, comment, students:profiles(full_name)')
-        .eq('tutor_id', tutor.id)
-        .limit(5);
+
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -60,7 +55,7 @@ export default async function TutorPublicPage({ params }: { params: { slug: stri
                             <div className="flex-1 text-center md:text-left">
                                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{tutor.profiles?.full_name}</h1>
                                 <div className="flex flex-wrap justify-center md:justify-start gap-4 text-slate-600 mb-6">
-                                    <span className="flex items-center gap-1"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400" /> {tutor.rating} Rating</span>
+
                                     <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> Online & In-person</span>
                                 </div>
                                 <p className="text-lg text-slate-600 max-w-2xl mb-8">{tutor.bio || "Passionate tutor dedicated to student success."}</p>
@@ -100,23 +95,7 @@ export default async function TutorPublicPage({ params }: { params: { slug: stri
                                 </div>
                             </section>
 
-                            <section>
-                                <h2 className="text-2xl font-bold mb-4">Reviews</h2>
-                                <div className="space-y-4">
-                                    {reviews?.map((review: any, i: number) => (
-                                        <Card key={i}>
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="font-semibold">{review.students?.full_name}</span>
-                                                    <div className="flex"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400" /> {review.rating}</div>
-                                                </div>
-                                                <p className="text-slate-600">{review.comment}</p>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                    {(!reviews || reviews.length === 0) && <p className="text-slate-500 italic">No reviews yet.</p>}
-                                </div>
-                            </section>
+
                         </div>
 
                         <div>

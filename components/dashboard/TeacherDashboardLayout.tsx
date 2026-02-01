@@ -28,7 +28,7 @@ const navItems = [
     { href: "/dashboard/teacher/assignments", label: "Assignments", icon: BookOpen },
     { href: "/dashboard/teacher/sessions", label: "Sessions", icon: Calendar },
     { href: "/dashboard/teacher/students", label: "Students", icon: Users },
-    { href: "/settings", label: "Profile", icon: User },
+    { href: "/dashboard/teacher/profile", label: "Profile", icon: User },
 ];
 
 interface TeacherDashboardLayoutProps {

@@ -40,7 +40,8 @@ export default function TeacherDashboardPage() {
         date: "",
         startTime: "",
         endTime: "",
-        location: "online"
+        location: "online",
+        capacity: "1"
     });
 
     useEffect(() => {
@@ -198,6 +199,7 @@ export default function TeacherDashboardPage() {
                     subject: newSession.subject,
                     price: parseInt(newSession.price),
                     location: newSession.location,
+                    capacity: parseInt(newSession.capacity),
                     start_time: startDateTime.toISOString(),
                     end_time: endDateTime.toISOString(),
                     status: 'AVAILABLE'
@@ -208,7 +210,7 @@ export default function TeacherDashboardPage() {
             toast.success("Session created successfully");
             setIsSessionDialogOpen(false);
             fetchDashboardData();
-            setNewSession({ subject: "", price: "", date: "", startTime: "", endTime: "", location: "online" });
+            setNewSession({ subject: "", price: "", date: "", startTime: "", endTime: "", location: "online", capacity: "1" });
         } catch (error: any) {
             toast.error(error.message || "Failed to create session");
         }
@@ -267,6 +269,10 @@ export default function TeacherDashboardPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2"><Label>Start</Label><Input type="time" value={newSession.startTime} onChange={(e) => setNewSession({ ...newSession, startTime: e.target.value })} /></div>
                                 <div className="grid gap-2"><Label>End</Label><Input type="time" value={newSession.endTime} onChange={(e) => setNewSession({ ...newSession, endTime: e.target.value })} /></div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Capacity (Students)</Label>
+                                <Input type="number" min="1" value={newSession.capacity} onChange={(e) => setNewSession({ ...newSession, capacity: e.target.value })} />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Location</Label>

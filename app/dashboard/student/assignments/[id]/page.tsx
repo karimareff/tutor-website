@@ -59,7 +59,7 @@ export default function StudentAssignmentPage() {
 
             if (subData) {
                 setSubmission(subData);
-                setComments(subData.comments || "");
+                setComments(subData.student_response || "");
                 setFileUrl(subData.file_url || "");
             }
 
@@ -83,7 +83,7 @@ export default function StudentAssignmentPage() {
             const submissionData = {
                 assignment_id: id,
                 student_id: user?.id,
-                comments: comments,
+                student_response: comments,
                 file_url: fileUrl,
                 submitted_at: new Date().toISOString()
             };
@@ -218,6 +218,12 @@ export default function StudentAssignmentPage() {
                             )}
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            {submission?.feedback && submission?.grade && (
+                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <h4 className="font-semibold text-blue-900 mb-2">Teacher Feedback</h4>
+                                    <p className="text-sm text-blue-800 whitespace-pre-wrap">{submission.feedback}</p>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label>Comments / Text Answer</Label>
                                 <Textarea
