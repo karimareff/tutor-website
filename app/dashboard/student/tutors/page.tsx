@@ -59,8 +59,8 @@ export default function StudentTutorsPage() {
     return (
         <div className="space-y-6 max-w-5xl">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900">My Tutors</h1>
-                <p className="text-slate-500">Tutors you're currently learning from</p>
+                <h1 className="text-2xl font-bold text-slate-900">My Classes</h1>
+                <p className="text-slate-500">Classes you're enrolled in</p>
             </div>
 
             {tutors.length === 0 ? (
@@ -69,9 +69,9 @@ export default function StudentTutorsPage() {
                         <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-purple-500">
                             <User className="h-6 w-6" />
                         </div>
-                        <h3 className="text-lg font-medium text-slate-900">No tutors yet</h3>
+                        <h3 className="text-lg font-medium text-slate-900">No classes yet</h3>
                         <p className="text-slate-500 max-w-sm mt-1 mb-4">
-                            You haven't joined any tutors yet. Ask your tutor for their invite link to get started.
+                            You haven't joined any classes yet. Ask your tutor for their invite link to get started.
                         </p>
                     </CardContent>
                 </Card>

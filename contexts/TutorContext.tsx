@@ -13,6 +13,9 @@ interface LinkedTutor {
         id: string;
         slug: string;
         subjects?: string[];
+        brand_color?: string;
+        academy_name?: string;
+        welcome_message?: string;
         profiles: {
             full_name: string;
             avatar_url?: string;
@@ -59,7 +62,10 @@ export const TutorProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     tutors (
                         id,
                         slug,
-                        subjects
+                        subjects,
+                        brand_color,
+                        academy_name,
+                        welcome_message
                     )
                 `)
                 .eq('student_id', user.id)
@@ -104,6 +110,9 @@ export const TutorProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         id: tutorData.id,
                         slug: tutorData.slug,
                         subjects: tutorData.subjects,
+                        brand_color: tutorData.brand_color,
+                        academy_name: tutorData.academy_name,
+                        welcome_message: tutorData.welcome_message,
                         profiles: profileData,
                     },
                 };

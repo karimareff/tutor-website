@@ -8,47 +8,47 @@ import Link from "next/link";
 export default function PricingPage() {
     const plans = [
         {
-            name: "Pay As You Go",
-            price: "300",
-            description: "Perfect for occasional help",
+            name: "Free",
+            price: "0",
+            description: "For new tutors getting started",
             features: [
-                "1-on-1 Tutoring",
-                "Flexible Scheduling",
-                "Pay per session",
-                "No commitment",
-                "Access to all tutors"
+                "Up to 5 Students",
+                "Unlimited Sessions",
+                "Basic Student Portal",
+                "Email Support",
+                "Manual Payments"
             ],
-            buttonText: "Find a Tutor",
-            href: "/tutors",
+            buttonText: "Start for Free",
+            href: "/signup?role=tutor",
             popular: false
         },
         {
-            name: "Exam Prep Bundle",
-            price: "2500",
-            description: "10 hours of intensive prep",
+            name: "Pro",
+            price: "299",
+            description: "For growing tutoring businesses",
             features: [
-                "10 Hours of Tutoring",
-                "Save 500 EGP",
-                "Priority Booking",
-                "Study Plan Included",
-                "Progress Tracking"
+                "Unlimited Students",
+                "Advanced Quizzes & Assignments",
+                "Automated Grading",
+                "Priority Support",
+                "Custom Branding"
             ],
-            buttonText: "Get Started",
-            href: "/signup",
+            buttonText: "Start 14-Day Trial",
+            href: "/signup?role=tutor",
             popular: true
         },
         {
-            name: "Semester Pass",
-            price: "6000",
-            description: "Complete semester support",
+            name: "Academy",
+            price: "Contact",
+            description: "For centers and schools",
             features: [
-                "25 Hours of Tutoring",
-                "Save 1500 EGP",
-                "Dedicated Tutor",
-                "24/7 Q&A Support",
-                "Mock Exams Included"
+                "Multiple Tutor Accounts",
+                "Admin Dashboard",
+                "Advanced Analytics",
+                "API Access",
+                "Dedicated Account Manager"
             ],
-            buttonText: "Contact Us",
+            buttonText: "Contact Sales",
             href: "/contact",
             popular: false
         }
@@ -60,8 +60,8 @@ export default function PricingPage() {
             <main className="flex-1 py-20 bg-slate-50">
                 <div className="container">
                     <div className="text-center mb-16">
-                        <h1 className="text-4xl font-bold mb-4 text-slate-900">Simple, Transparent Pricing</h1>
-                        <p className="text-xl text-slate-500">Invest in your future with affordable, high-quality tutoring.</p>
+                        <h1 className="text-4xl font-bold mb-4 text-slate-900">Simple Pricing for Tutors</h1>
+                        <p className="text-xl text-slate-500">Stop paying commissions. Start building your own academy.</p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -79,7 +79,7 @@ export default function PricingPage() {
                                 <CardContent className="flex-1">
                                     <div className="mb-6">
                                         <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                                        <span className="text-slate-500"> EGP</span>
+                                        {plan.price !== "Contact" && <span className="text-slate-500"> EGP/month</span>}
                                     </div>
                                     <ul className="space-y-3">
                                         {plan.features.map((feature) => (

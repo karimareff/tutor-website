@@ -9,6 +9,7 @@ import {
     Calendar,
     Users,
     User,
+    GraduationCap,
 } from "lucide-react";
 import {
     Sidebar,
@@ -28,6 +29,7 @@ const navItems = [
     { href: "/dashboard/teacher/assignments", label: "Assignments", icon: BookOpen },
     { href: "/dashboard/teacher/sessions", label: "Sessions", icon: Calendar },
     { href: "/dashboard/teacher/students", label: "Students", icon: Users },
+    { href: "/dashboard/teacher/academy", label: "My Academy", icon: GraduationCap },
     { href: "/dashboard/teacher/profile", label: "Profile", icon: User },
 ];
 
@@ -47,7 +49,7 @@ export default function TeacherDashboardLayout({ children }: TeacherDashboardLay
                             T
                         </div>
                         <div className="group-data-[collapsible=icon]:hidden">
-                            <h2 className="font-bold text-lg text-slate-900">TeacherHub</h2>
+                            <h2 className="font-bold text-lg text-slate-900">TutorHub</h2>
                             <p className="text-xs text-slate-500">Manage your classroom</p>
                         </div>
                     </Link>

@@ -7,23 +7,23 @@ export default function HowItWorksPage() {
     const steps = [
         {
             icon: Search,
-            title: "1. Find Your Tutor",
-            description: "Browse our verified tutors by subject, exam, or price. Read reviews and check their experience."
-        },
-        {
-            icon: Calendar,
-            title: "2. Book a Session",
-            description: "Choose a time that works for you. Our smart calendar ensures no double bookings."
+            title: "1. Create Your Profile",
+            description: "Build your professional tutor site in minutes. Showcase your bio, subjects, and experience."
         },
         {
             icon: Video,
-            title: "3. Learn Online",
-            description: "Connect via our integrated video classroom or meet in person if available."
+            title: "2. Generate Invite Link",
+            description: "Get a unique link (e.g., tutorhub.com/join/ahmed) to share with your students on WhatsApp."
+        },
+        {
+            icon: Calendar,
+            title: "3. Manage Your Classes",
+            description: "Schedule sessions, set assignments, and create quizzes. Everything is organized in one place."
         },
         {
             icon: GraduationCap,
-            title: "4. Ace Your Exams",
-            description: "Track your progress, get feedback, and achieve your target scores."
+            title: "4. Grow Your Academy",
+            description: "Track student progress, automate payments (coming soon), and scale your business."
         }
     ];
 
@@ -35,7 +35,7 @@ export default function HowItWorksPage() {
                     <div className="container text-center">
                         <h1 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900">How It Works</h1>
                         <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-                            Getting started is easy. Follow these simple steps to begin your learning journey.
+                            Launch your digital tutoring academy in 4 simple steps.
                         </p>
                     </div>
                 </section>

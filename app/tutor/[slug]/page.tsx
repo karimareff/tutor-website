@@ -10,9 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 // This is a Server Component
-export default async function TutorPublicPage({ params }: { params: { slug: string } }) {
+export default async function TutorPublicPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
     const supabase = await createClient(); // Use server-side client if available or default
-    const slug = params.slug;
 
     // Fetch Tutor
     const { data: tutor, error } = await supabase

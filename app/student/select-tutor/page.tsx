@@ -60,11 +60,10 @@ export default function SelectTutorPage() {
                     {linkedTutors.length === 0 ? (
                         <Card className="max-w-md mx-auto">
                             <CardContent className="pt-6 text-center">
-                                <p className="text-slate-500 mb-4">You haven't joined any tutors yet.</p>
-                                <p className="text-sm text-slate-400 mb-6">Ask your tutor for their invite link to get started!</p>
-                                <Button variant="outline" asChild>
-                                    <Link href="/tutors">Browse Tutors</Link>
-                                </Button>
+                                <h2 className="text-lg font-semibold text-slate-900 mb-2">Join a New Class</h2>
+                                <p className="text-slate-500 mb-6 mx-auto">
+                                    To join a new class, you need an invite link from your tutor (e.g., tutorhub.com/join/tutor-name).
+                                </p>
                             </CardContent>
                         </Card>
                     ) : (

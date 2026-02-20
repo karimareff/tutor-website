@@ -13,7 +13,7 @@ export default function AboutPage() {
                     <div className="container text-center">
                         <h1 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900">About TutorHub</h1>
                         <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-                            We are dedicated to connecting students with the best tutors in Egypt to help them achieve their academic goals.
+                            We are giving every tutor the tools to run a professional academy, free from administrative chaos.
                         </p>
                     </div>
                 </section>
@@ -29,7 +29,7 @@ export default function AboutPage() {
                                     </div>
                                     <h3 className="text-xl font-semibold mb-2 text-slate-900">Our Mission</h3>
                                     <p className="text-slate-500">
-                                        To provide accessible, high-quality education to every student through personalized tutoring.
+                                        To professionalize the private tutoring industry by providing world-class management tools.
                                     </p>
                                 </CardContent>
                             </Card>
@@ -40,7 +40,7 @@ export default function AboutPage() {
                                     </div>
                                     <h3 className="text-xl font-semibold mb-2 text-slate-900">Our Community</h3>
                                     <p className="text-slate-500">
-                                        A growing network of verified tutors and ambitious students working together.
+                                        A growing community of independent educators building their own brands and businesses.
                                     </p>
                                 </CardContent>
                             </Card>
@@ -51,7 +51,7 @@ export default function AboutPage() {
                                     </div>
                                     <h3 className="text-xl font-semibold mb-2 text-slate-900">Our Values</h3>
                                     <p className="text-slate-500">
-                                        Excellence, integrity, and a passion for learning drive everything we do.
+                                        Independence, ownership, and student success are at the heart of everything we build.
                                     </p>
                                 </CardContent>
                             </Card>

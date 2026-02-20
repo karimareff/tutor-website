@@ -7,7 +7,7 @@ import MobileNav from '@/components/MobileNav'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-    title: 'TutorHub Egypt - Find Your Perfect Tutor',
+    title: 'TutorHub — Launch Your Tutoring Academy',
     description: 'Connect with qualified tutors for SAT, ACT, IGCSE and more in Egypt',
 }
 

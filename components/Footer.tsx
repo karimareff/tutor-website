@@ -9,27 +9,27 @@ const Footer = () => {
           <div>
             <Link href="/" className="flex items-center gap-2 font-bold text-lg mb-4">
               <GraduationCap className="h-6 w-6 text-primary" />
-              <span className="text-slate-900">TutorHub Egypt</span>
+              <span className="text-slate-900">TutorHub</span>
             </Link>
             <p className="text-sm text-slate-500">
-              Connect with Egypt's best tutors for ACT, SAT, and EST exam preparation.
+              The all-in-one platform for private tutors to manage classes, assignments, and student progress.
             </p>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4 text-slate-900">Students</h4>
+            <h4 className="font-semibold mb-4 text-slate-900">Product</h4>
             <ul className="space-y-2 text-sm text-slate-500">
               <li><Link href="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
               <li><Link href="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+              <li><Link href="/signup?role=tutor" className="hover:text-primary transition-colors">For Tutors</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4 text-slate-900">Tutors</h4>
+            <h4 className="font-semibold mb-4 text-slate-900">Resources</h4>
             <ul className="space-y-2 text-sm text-slate-500">
-              <li><Link href="/become-tutor" className="hover:text-primary transition-colors">Become a Tutor</Link></li>
-              <li><Link href="/tutor-resources" className="hover:text-primary transition-colors">Resources</Link></li>
-              <li><Link href="/tutor-support" className="hover:text-primary transition-colors">Support</Link></li>
+              <li><Link href="/login" className="hover:text-primary transition-colors">Login</Link></li>
+              <li><Link href="/signup" className="hover:text-primary transition-colors">Sign Up</Link></li>
             </ul>
           </div>
 
@@ -45,7 +45,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
-          <p>&copy; {new Date().getFullYear()} TutorHub Egypt. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} TutorHub. All rights reserved.</p>
         </div>
       </div>
     </footer>

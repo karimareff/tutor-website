@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,11 @@ export default function FileUpload({
     const [uploading, setUploading] = useState(false);
     const [fileUrl, setFileUrl] = useState<string | null>(existingUrl || null);
 
+    // Sync with parent's existingUrl when it changes
+    useEffect(() => {
+        setFileUrl(existingUrl || null);
+    }, [existingUrl]);
+
     const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         try {
             setUploading(true);
@@ -38,12 +43,14 @@ export default function FileUpload({
 
             const file = event.target.files[0];
             const fileExt = file.name.split('.').pop();
-            const fileName = `${path}${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const fileName = `${path}${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
             const filePath = `${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from(bucket)
-                .upload(filePath, file);
+                .upload(filePath, file, {
+                    upsert: true // Allow replacing existing files
+                });
 
             if (uploadError) {
                 throw uploadError;

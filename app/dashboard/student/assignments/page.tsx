@@ -4,35 +4,61 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, BookOpen, Calendar, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, BookOpen, Calendar, CheckCircle2, AlertCircle, LayoutGrid } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTutorContext } from "@/contexts/TutorContext";
 import { format } from "date-fns";
 import Link from "next/link";
 
 export default function StudentAssignmentsPage() {
     const { user } = useAuth();
+    const { activeTutorId, activeTutor, clearActiveTutor } = useTutorContext();
     const [loading, setLoading] = useState(true);
     const [assignments, setAssignments] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
-        if (user) {
+        if (user && activeTutorId) {
             fetchAssignments();
         }
-    }, [user]);
+    }, [user, activeTutorId]);
+
+    // Gate: require academy selection
+    if (!activeTutorId) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="h-14 w-14 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+                    <LayoutGrid className="h-7 w-7 text-slate-400" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Select an Academy</h2>
+                <p className="text-slate-500 max-w-sm mb-6">Choose an academy from the switcher above to view your assignments.</p>
+                <Button variant="outline" onClick={() => clearActiveTutor()}>
+                    <Link href="/dashboard/student">Go to My Academies</Link>
+                </Button>
+            </div>
+        );
+    }
 
     const fetchAssignments = async () => {
         try {
-            // First get my tutors to filter assignments
-            const { data: tutorsData } = await supabase
-                .from('student_tutors')
-                .select('tutor_id')
-                .eq('student_id', user?.id);
+            setLoading(true);
 
-            const tutorIds = tutorsData?.map((t: any) => t.tutor_id) || [];
+            // Determine which tutor IDs to query
+            let tutorIds: string[] = [];
+
+            if (activeTutorId) {
+                tutorIds = [activeTutorId];
+            } else {
+                const { data: tutorsData } = await supabase
+                    .from('student_tutors')
+                    .select('tutor_id')
+                    .eq('student_id', user?.id);
+                tutorIds = tutorsData?.map((t: any) => t.tutor_id) || [];
+            }
 
             if (tutorIds.length === 0) {
+                setAssignments([]);
                 setLoading(false);
                 return;
             }
@@ -60,11 +86,19 @@ export default function StudentAssignmentsPage() {
         a.tutors?.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const activeTutorName = activeTutor?.tutor?.profiles?.full_name;
+
     return (
         <div className="space-y-6 max-w-5xl">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900">Assignments</h1>
-                <p className="text-slate-500">View and submit your assignments</p>
+                <h1 className="text-2xl font-bold text-slate-900">
+                    {activeTutorName ? `${activeTutorName}'s Assignments` : 'Assignments'}
+                </h1>
+                <p className="text-slate-500">
+                    {activeTutorName
+                        ? `Assignments from ${activeTutorName}`
+                        : 'View and submit your assignments'}
+                </p>
             </div>
 
             <div className="flex items-center gap-4">
@@ -89,7 +123,11 @@ export default function StudentAssignmentsPage() {
                         </div>
                         <h3 className="text-lg font-medium text-slate-900">No assignments found</h3>
                         <p className="text-slate-500 max-w-sm mt-1 mb-4">
-                            {searchQuery ? "Try adjusting your search terms." : "Your tutors haven't assigned any work yet."}
+                            {searchQuery
+                                ? "Try adjusting your search terms."
+                                : activeTutorName
+                                    ? `${activeTutorName} hasn't assigned any work yet.`
+                                    : "Your tutors haven't assigned any work yet."}
                         </p>
                     </CardContent>
                 </Card>

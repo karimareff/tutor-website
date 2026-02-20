@@ -3,27 +3,47 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Video, User } from "lucide-react";
+import { Calendar, Clock, Video, User, LayoutGrid } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTutorContext } from "@/contexts/TutorContext";
 import { format } from "date-fns";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function StudentSessionsPage() {
     const { user } = useAuth();
+    const { activeTutorId, activeTutor, clearActiveTutor } = useTutorContext();
     const [loading, setLoading] = useState(true);
     const [upcomingSessions, setUpcomingSessions] = useState<any[]>([]);
     const [pastSessions, setPastSessions] = useState<any[]>([]);
 
     useEffect(() => {
-        if (user) {
+        if (user && activeTutorId) {
             fetchSessions();
         }
-    }, [user]);
+    }, [user, activeTutorId]);
+
+    // Gate: require academy selection
+    if (!activeTutorId) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="h-14 w-14 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+                    <LayoutGrid className="h-7 w-7 text-slate-400" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Select an Academy</h2>
+                <p className="text-slate-500 max-w-sm mb-6">Choose an academy from the switcher above to view your sessions.</p>
+                <Button variant="outline" onClick={() => clearActiveTutor()}>
+                    <Link href="/dashboard/student">Go to My Academies</Link>
+                </Button>
+            </div>
+        );
+    }
 
     const fetchSessions = async () => {
         try {
+            setLoading(true);
+
             const { data } = await supabase
                 .from('bookings')
                 .select(`
@@ -36,6 +56,7 @@ export default function StudentSessionsPage() {
                         end_time,
                         meeting_url,
                         duration,
+                        tutor_id,
                         tutors(profiles(full_name))
                     )
                 `)
@@ -51,7 +72,11 @@ export default function StudentSessionsPage() {
                     const session = Array.isArray(booking.sessions) ? booking.sessions[0] : booking.sessions;
                     const startTime = new Date(session.start_time);
 
-                    // Attach normalized session to booking object (shallow copy)
+                    // Filter by active tutor if set
+                    if (activeTutorId && session.tutor_id !== activeTutorId) {
+                        continue;
+                    }
+
                     const normalizedBooking = { ...booking, sessions: session };
 
                     if (startTime >= now) {
@@ -63,7 +88,6 @@ export default function StudentSessionsPage() {
             }
 
             setUpcomingSessions(upcoming);
-            // Sort past sessions descending
             setPastSessions(past.sort((a, b) =>
                 new Date(b.sessions.start_time).getTime() - new Date(a.sessions.start_time).getTime()
             ));
@@ -74,6 +98,8 @@ export default function StudentSessionsPage() {
             setLoading(false);
         }
     };
+
+    const activeTutorName = activeTutor?.tutor?.profiles?.full_name;
 
     const SessionCard = ({ booking, isPast = false }: { booking: any, isPast?: boolean }) => (
         <Card className="mb-4 hover:border-blue-300 transition-colors">
@@ -122,8 +148,14 @@ export default function StudentSessionsPage() {
         <div className="space-y-6 max-w-5xl">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">My Sessions</h1>
-                    <p className="text-slate-500">Manage your upcoming and past tutoring sessions</p>
+                    <h1 className="text-2xl font-bold text-slate-900">
+                        {activeTutorName ? `${activeTutorName}'s Sessions` : 'My Sessions'}
+                    </h1>
+                    <p className="text-slate-500">
+                        {activeTutorName
+                            ? `Sessions with ${activeTutorName}`
+                            : 'Manage your upcoming and past tutoring sessions'}
+                    </p>
                 </div>
                 <Link href="/dashboard/student/tutors">
                     <Button>Book New Session</Button>
@@ -147,7 +179,9 @@ export default function StudentSessionsPage() {
                                 </div>
                                 <h3 className="text-lg font-medium text-slate-900">No upcoming sessions</h3>
                                 <p className="text-slate-500 max-w-sm mt-1 mb-4">
-                                    You don't have any booked sessions coming up.
+                                    {activeTutorName
+                                        ? `No upcoming sessions with ${activeTutorName}.`
+                                        : "You don't have any booked sessions coming up."}
                                 </p>
                                 <Link href="/dashboard/student/tutors">
                                     <Button>Book a Session</Button>
