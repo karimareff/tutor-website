@@ -12,15 +12,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Check, LayoutGrid, Repeat } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function TutorSwitcher() {
     const { linkedTutors, activeTutor, activeTutorId, setActiveTutor, clearActiveTutor } = useTutorContext();
+    const router = useRouter();
 
     if (linkedTutors.length === 0) {
         return null;
     }
 
     const activeBrandColor = activeTutor?.tutor?.brand_color || '#3b82f6';
+
+    const handleSwitchAcademy = (item: typeof linkedTutors[0]) => {
+        const slug = item.tutor?.slug;
+        if (slug) {
+            setActiveTutor(item.tutor_id);
+            router.push(`/academy/${slug}/home`);
+        } else {
+            setActiveTutor(item.tutor_id);
+        }
+    };
+
+    const handleGoToLobby = () => {
+        clearActiveTutor();
+        router.push('/dashboard/student');
+    };
 
     return (
         <DropdownMenu>
@@ -67,7 +84,7 @@ export default function TutorSwitcher() {
 
                 {/* My Academies (lobby) option */}
                 <DropdownMenuItem
-                    onClick={() => clearActiveTutor()}
+                    onClick={handleGoToLobby}
                     className="cursor-pointer"
                 >
                     <div className="flex items-center gap-2.5 w-full">
@@ -94,7 +111,7 @@ export default function TutorSwitcher() {
                     return (
                         <DropdownMenuItem
                             key={item.id}
-                            onClick={() => setActiveTutor(item.tutor_id)}
+                            onClick={() => handleSwitchAcademy(item)}
                             className="cursor-pointer"
                         >
                             <div className="flex items-center gap-2.5 w-full">

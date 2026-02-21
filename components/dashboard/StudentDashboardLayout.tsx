@@ -27,14 +27,15 @@ import {
 import TutorSwitcher from "@/components/TutorSwitcher";
 import { useTutorContext } from "@/contexts/TutorContext";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const academyNavItems = [
-    { href: "/dashboard/student", label: "Home", icon: LayoutDashboard },
-    { href: "/dashboard/student/assignments", label: "Assignments", icon: BookOpen },
-    { href: "/dashboard/student/quizzes", label: "Quizzes", icon: BrainCircuit },
-    { href: "/dashboard/student/sessions", label: "Sessions", icon: Calendar },
-    { href: "/dashboard/student/profile", label: "Profile", icon: User },
+// Nav items defined as suffixes — basePath is computed dynamically
+const academyNavSuffixes = [
+    { suffix: "", altSuffix: "/home", label: "Home", icon: LayoutDashboard },
+    { suffix: "/assignments", label: "Assignments", icon: BookOpen },
+    { suffix: "/quizzes", label: "Quizzes", icon: BrainCircuit },
+    { suffix: "/sessions", label: "Sessions", icon: Calendar },
+    { suffix: "/profile", label: "Profile", icon: User },
 ];
 
 const lobbyNavItems = [
@@ -47,12 +48,48 @@ interface StudentDashboardLayoutProps {
     children: React.ReactNode;
 }
 
+// Compute basePath and whether we're in academy URL mode
+function useAcademyBasePath(pathname: string) {
+    // Match /academy/[slug]/... (portal routes)
+    const academyMatch = pathname.match(/^\/academy\/([^/]+)/);
+    if (academyMatch) {
+        return { basePath: `/academy/${academyMatch[1]}`, slug: academyMatch[1], isAcademyUrl: true };
+    }
+    return { basePath: '/dashboard/student', slug: null, isAcademyUrl: false };
+}
+
+// Map pathname to a page label for the browser tab title
+function getPageLabel(pathname: string): string {
+    if (pathname.endsWith('/assignments')) return 'Assignments';
+    if (pathname.endsWith('/quizzes')) return 'Quizzes';
+    if (pathname.endsWith('/sessions')) return 'Sessions';
+    if (pathname.endsWith('/profile')) return 'Profile';
+    return 'Home';
+}
+
 export default function StudentDashboardLayout({ children }: StudentDashboardLayoutProps) {
     const pathname = usePathname();
     const { activeTutor, linkedTutors } = useTutorContext();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { basePath, isAcademyUrl } = useAcademyBasePath(pathname);
 
     const inAcademyMode = !!activeTutor;
+
+    // ─── Dynamic browser tab title ───
+    useEffect(() => {
+        if (inAcademyMode) {
+            const academyName = activeTutor.tutor?.academy_name || activeTutor.tutor?.profiles?.full_name || 'Academy';
+            const pageLabel = getPageLabel(pathname);
+            document.title = `${pageLabel} — ${academyName}`;
+        } else {
+            const pageLabel = getPageLabel(pathname);
+            if (pageLabel === 'Home') {
+                document.title = 'My Academies — TutorHub';
+            } else {
+                document.title = `${pageLabel} — TutorHub`;
+            }
+        }
+    }, [pathname, inAcademyMode, activeTutor]);
 
     // ─── ACADEMY MODE: Top-nav website layout ───
     if (inAcademyMode) {
@@ -60,6 +97,17 @@ export default function StudentDashboardLayout({ children }: StudentDashboardLay
         const academyName = activeTutor.tutor?.academy_name || activeTutor.tutor?.profiles?.full_name || 'Academy';
         const avatarUrl = activeTutor.tutor?.profiles?.avatar_url;
         const tutorName = activeTutor.tutor?.profiles?.full_name;
+
+        // Build nav items with dynamic basePath
+        const homeHref = isAcademyUrl ? `${basePath}/home` : basePath;
+        const navItems = academyNavSuffixes.map(item => ({
+            href: item.suffix === "" ? homeHref : `${basePath}${item.suffix}`,
+            label: item.label,
+            icon: item.icon,
+            isActive: item.suffix === ""
+                ? (pathname === basePath || pathname === `${basePath}/home` || pathname === '/dashboard/student')
+                : pathname === `${basePath}${item.suffix}`,
+        }));
 
         return (
             <div className="min-h-screen bg-white">
@@ -71,7 +119,7 @@ export default function StudentDashboardLayout({ children }: StudentDashboardLay
                     <div className="max-w-6xl mx-auto px-4 sm:px-6">
                         <div className="flex items-center justify-between h-16">
                             {/* Left: Academy Brand */}
-                            <Link href="/dashboard/student" className="flex items-center gap-3 flex-shrink-0">
+                            <Link href={homeHref} className="flex items-center gap-3 flex-shrink-0">
                                 <div
                                     className="h-9 w-9 rounded-xl overflow-hidden relative flex-shrink-0 shadow-sm"
                                     style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor}cc)` }}
@@ -92,31 +140,28 @@ export default function StudentDashboardLayout({ children }: StudentDashboardLay
 
                             {/* Center: Nav Links (desktop) */}
                             <div className="hidden md:flex items-center gap-1">
-                                {academyNavItems.map((item) => {
-                                    const isActive = pathname === item.href;
-                                    return (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            className="relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                                            style={{
-                                                color: isActive ? brandColor : '#64748b',
-                                                backgroundColor: isActive ? `${brandColor}10` : 'transparent',
-                                            }}
-                                        >
-                                            <span className="flex items-center gap-1.5">
-                                                <item.icon className="h-4 w-4" />
-                                                {item.label}
-                                            </span>
-                                            {isActive && (
-                                                <span
-                                                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"
-                                                    style={{ backgroundColor: brandColor }}
-                                                />
-                                            )}
-                                        </Link>
-                                    );
-                                })}
+                                {navItems.map((item) => (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                                        style={{
+                                            color: item.isActive ? brandColor : '#64748b',
+                                            backgroundColor: item.isActive ? `${brandColor}10` : 'transparent',
+                                        }}
+                                    >
+                                        <span className="flex items-center gap-1.5">
+                                            <item.icon className="h-4 w-4" />
+                                            {item.label}
+                                        </span>
+                                        {item.isActive && (
+                                            <span
+                                                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"
+                                                style={{ backgroundColor: brandColor }}
+                                            />
+                                        )}
+                                    </Link>
+                                ))}
                             </div>
 
                             {/* Right: Switcher + Mobile menu */}
@@ -135,24 +180,21 @@ export default function StudentDashboardLayout({ children }: StudentDashboardLay
                     {/* Mobile Nav */}
                     {mobileMenuOpen && (
                         <div className="md:hidden border-t bg-white px-4 py-2 space-y-1" style={{ borderColor: `${brandColor}15` }}>
-                            {academyNavItems.map((item) => {
-                                const isActive = pathname === item.href;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                                        style={{
-                                            color: isActive ? brandColor : '#475569',
-                                            backgroundColor: isActive ? `${brandColor}10` : 'transparent',
-                                        }}
-                                    >
-                                        <item.icon className="h-4 w-4" />
-                                        {item.label}
-                                    </Link>
-                                );
-                            })}
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                                    style={{
+                                        color: item.isActive ? brandColor : '#475569',
+                                        backgroundColor: item.isActive ? `${brandColor}10` : 'transparent',
+                                    }}
+                                >
+                                    <item.icon className="h-4 w-4" />
+                                    {item.label}
+                                </Link>
+                            ))}
                         </div>
                     )}
                 </nav>

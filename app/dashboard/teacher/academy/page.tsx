@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { GraduationCap, Copy, ExternalLink, Save, Loader2, Palette } from "lucide-react";
+import { GraduationCap, Copy, ExternalLink, Save, Loader2, Palette, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Link from "next/link";
+import { COLOR_THEMES } from "@/lib/color-themes";
 
 export default function AcademySettingsPage() {
     const { user } = useAuth();
@@ -153,9 +154,39 @@ export default function AcademySettingsPage() {
                         </p>
                     </div>
 
-                    {/* Brand Color */}
+                    {/* Color Theme Presets */}
                     <div className="space-y-2">
-                        <Label htmlFor="brand_color">Brand Color</Label>
+                        <Label>Color Theme</Label>
+                        <div className="grid grid-cols-5 gap-2">
+                            {COLOR_THEMES.map((theme) => {
+                                const isSelected = formData.brand_color.toLowerCase() === theme.color.toLowerCase();
+                                return (
+                                    <button
+                                        key={theme.name}
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, brand_color: theme.color }))}
+                                        className="group relative flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105"
+                                        style={{
+                                            borderColor: isSelected ? theme.color : '#e2e8f0',
+                                            backgroundColor: isSelected ? `${theme.color}08` : 'transparent',
+                                        }}
+                                    >
+                                        <div
+                                            className="h-8 w-8 rounded-lg shadow-sm flex items-center justify-center"
+                                            style={{ background: `linear-gradient(135deg, ${theme.color}, ${theme.color}cc)` }}
+                                        >
+                                            {isSelected && <Check className="h-4 w-4 text-white" />}
+                                        </div>
+                                        <span className="text-[10px] font-medium text-slate-600">{theme.name}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Custom Color Picker */}
+                    <div className="space-y-2">
+                        <Label htmlFor="brand_color">Custom Color</Label>
                         <div className="flex items-center gap-3">
                             <input
                                 type="color"
@@ -214,3 +245,4 @@ export default function AcademySettingsPage() {
         </div>
     );
 }
+

@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTutorContext } from "@/contexts/TutorContext";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useRouter, usePathname } from "next/navigation";
+import { useAcademyBasePath } from "@/lib/useAcademyBasePath";
 
 interface ProgressStats {
     sessionsAttended: number;
@@ -23,6 +25,7 @@ interface ProgressStats {
 export default function StudentDashboardPage() {
     const { user } = useAuth();
     const { activeTutorId, activeTutor, linkedTutors, setActiveTutor, loading: tutorsLoading } = useTutorContext();
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({
         assignments: [] as any[],
@@ -175,7 +178,14 @@ export default function StudentDashboardPage() {
                             return (
                                 <button
                                     key={item.id}
-                                    onClick={() => setActiveTutor(item.tutor_id)}
+                                    onClick={() => {
+                                        const slug = item.tutor?.slug;
+                                        if (slug) {
+                                            router.push(`/academy/${slug}/home`);
+                                        } else {
+                                            setActiveTutor(item.tutor_id);
+                                        }
+                                    }}
                                     className="text-left group relative overflow-hidden rounded-2xl border bg-white shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
                                 >
                                     <div
@@ -232,6 +242,7 @@ export default function StudentDashboardPage() {
     const welcomeMessage = activeTutor?.tutor?.welcome_message;
     const tutorName = activeTutor?.tutor?.profiles?.full_name;
     const avatarUrl = activeTutor?.tutor?.profiles?.avatar_url;
+    const basePath = useAcademyBasePath();
 
     if (loading) {
         return <div className="p-8 text-center text-slate-500">Loading...</div>;
@@ -288,7 +299,7 @@ export default function StudentDashboardPage() {
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Assignments Card */}
-                <Link href="/dashboard/student/assignments" className="group">
+                <Link href={`${basePath}/assignments`} className="group">
                     <div className="bg-white rounded-2xl border p-6 hover:shadow-md transition-all duration-300 h-full">
                         <div className="flex items-start justify-between mb-4">
                             <div className="p-3 rounded-xl" style={{ backgroundColor: `${brandColor}10`, color: brandColor }}>
@@ -313,7 +324,7 @@ export default function StudentDashboardPage() {
                 </Link>
 
                 {/* Quizzes Card */}
-                <Link href="/dashboard/student/quizzes" className="group">
+                <Link href={`${basePath}/quizzes`} className="group">
                     <div className="bg-white rounded-2xl border p-6 hover:shadow-md transition-all duration-300 h-full">
                         <div className="flex items-start justify-between mb-4">
                             <div className="p-3 rounded-xl" style={{ backgroundColor: `${brandColor}10`, color: brandColor }}>
@@ -336,7 +347,7 @@ export default function StudentDashboardPage() {
                 </Link>
 
                 {/* Sessions Card */}
-                <Link href="/dashboard/student/sessions" className="group">
+                <Link href={`${basePath}/sessions`} className="group">
                     <div className="bg-white rounded-2xl border p-6 hover:shadow-md transition-all duration-300 h-full">
                         <div className="flex items-start justify-between mb-4">
                             <div className="p-3 rounded-xl" style={{ backgroundColor: `${brandColor}10`, color: brandColor }}>
@@ -454,7 +465,7 @@ export default function StudentDashboardPage() {
                         ) : (
                             <div className="space-y-3">
                                 {data.assignments.map((a: any) => (
-                                    <Link key={a.id} href={`/dashboard/student/assignments/${a.id}`}>
+                                    <Link key={a.id} href={`${basePath}/assignments/${a.id}`}>
                                         <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer">
                                             <div className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${brandColor}10`, color: brandColor }}>
                                                 <BookOpen className="h-5 w-5" />
@@ -470,7 +481,7 @@ export default function StudentDashboardPage() {
                                     </Link>
                                 ))}
                                 {data.quizzes.map((q: any) => (
-                                    <Link key={q.id} href={`/dashboard/student/quizzes/${q.id}`}>
+                                    <Link key={q.id} href={`${basePath}/quizzes/${q.id}`}>
                                         <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer">
                                             <div className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${brandColor}10`, color: brandColor }}>
                                                 <BrainCircuit className="h-5 w-5" />

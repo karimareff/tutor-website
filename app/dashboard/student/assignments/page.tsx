@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, BookOpen, Calendar, CheckCircle2, AlertCircle, LayoutGrid } from "lucide-react";
+import { Search, BookOpen, Calendar, AlertCircle, LayoutGrid, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTutorContext } from "@/contexts/TutorContext";
 import { format } from "date-fns";
 import Link from "next/link";
+import { useAcademyBasePath } from "@/lib/useAcademyBasePath";
 
 export default function StudentAssignmentsPage() {
     const { user } = useAuth();
@@ -33,43 +34,24 @@ export default function StudentAssignmentsPage() {
                 </div>
                 <h2 className="text-xl font-bold text-slate-900 mb-2">Select an Academy</h2>
                 <p className="text-slate-500 max-w-sm mb-6">Choose an academy from the switcher above to view your assignments.</p>
-                <Button variant="outline" onClick={() => clearActiveTutor()}>
-                    <Link href="/dashboard/student">Go to My Academies</Link>
-                </Button>
+                <Link href="/dashboard/student">
+                    <Button variant="outline">Go to My Academies</Button>
+                </Link>
             </div>
         );
     }
 
+    const basePath = useAcademyBasePath();
+    const brandColor = activeTutor?.tutor?.brand_color || '#3b82f6';
+    const academyName = activeTutor?.tutor?.academy_name || activeTutor?.tutor?.profiles?.full_name || 'Academy';
+
     const fetchAssignments = async () => {
         try {
             setLoading(true);
-
-            // Determine which tutor IDs to query
-            let tutorIds: string[] = [];
-
-            if (activeTutorId) {
-                tutorIds = [activeTutorId];
-            } else {
-                const { data: tutorsData } = await supabase
-                    .from('student_tutors')
-                    .select('tutor_id')
-                    .eq('student_id', user?.id);
-                tutorIds = tutorsData?.map((t: any) => t.tutor_id) || [];
-            }
-
-            if (tutorIds.length === 0) {
-                setAssignments([]);
-                setLoading(false);
-                return;
-            }
-
             const { data } = await supabase
                 .from('assignments')
-                .select(`
-                    *,
-                    tutors(profiles(full_name))
-                `)
-                .in('tutor_id', tutorIds)
+                .select('*, tutors(profiles(full_name))')
+                .eq('tutor_id', activeTutorId)
                 .eq('status', 'PUBLISHED')
                 .order('due_date', { ascending: true });
 
@@ -82,25 +64,30 @@ export default function StudentAssignmentsPage() {
     };
 
     const filteredAssignments = assignments.filter(a =>
-        a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.tutors?.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+        a.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const activeTutorName = activeTutor?.tutor?.profiles?.full_name;
-
     return (
-        <div className="space-y-6 max-w-5xl">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900">
-                    {activeTutorName ? `${activeTutorName}'s Assignments` : 'Assignments'}
-                </h1>
-                <p className="text-slate-500">
-                    {activeTutorName
-                        ? `Assignments from ${activeTutorName}`
-                        : 'View and submit your assignments'}
-                </p>
+        <div className="space-y-6">
+            {/* Page Header */}
+            <div
+                className="relative overflow-hidden rounded-2xl p-6 md:p-8"
+                style={{ background: `linear-gradient(135deg, ${brandColor} 0%, ${brandColor}bb 100%)` }}
+            >
+                <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full opacity-10 bg-white" />
+                <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full opacity-10 bg-white" />
+                <div className="relative flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white">
+                        <BookOpen className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-white">Assignments</h1>
+                        <p className="text-white/70 text-sm">{academyName}</p>
+                    </div>
+                </div>
             </div>
 
+            {/* Search */}
             <div className="flex items-center gap-4">
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -111,57 +98,60 @@ export default function StudentAssignmentsPage() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
+                <span className="text-sm text-slate-500">{filteredAssignments.length} assignment{filteredAssignments.length !== 1 ? 's' : ''}</span>
             </div>
 
+            {/* Content */}
             {loading ? (
                 <div className="text-center py-12 text-slate-500">Loading assignments...</div>
             ) : filteredAssignments.length === 0 ? (
-                <Card className="bg-slate-50 border-dashed border-2">
-                    <CardContent className="py-16 flex flex-col items-center justify-center text-center">
-                        <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-orange-500">
-                            <BookOpen className="h-6 w-6" />
-                        </div>
-                        <h3 className="text-lg font-medium text-slate-900">No assignments found</h3>
-                        <p className="text-slate-500 max-w-sm mt-1 mb-4">
-                            {searchQuery
-                                ? "Try adjusting your search terms."
-                                : activeTutorName
-                                    ? `${activeTutorName} hasn't assigned any work yet.`
-                                    : "Your tutors haven't assigned any work yet."}
-                        </p>
-                    </CardContent>
-                </Card>
+                <div className="bg-white rounded-2xl border-2 border-dashed py-16 flex flex-col items-center justify-center text-center" style={{ borderColor: `${brandColor}30` }}>
+                    <div className="h-14 w-14 rounded-2xl flex items-center justify-center mb-4" style={{ backgroundColor: `${brandColor}10`, color: brandColor }}>
+                        <BookOpen className="h-7 w-7" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-1">No assignments yet</h3>
+                    <p className="text-slate-500 max-w-sm">
+                        {searchQuery
+                            ? "No assignments match your search."
+                            : `${academyName} hasn't assigned any work yet. Check back soon!`}
+                    </p>
+                </div>
             ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                     {filteredAssignments.map((assignment) => {
                         const isOverdue = new Date(assignment.due_date) < new Date();
                         return (
-                            <Link key={assignment.id} href={`/dashboard/student/assignments/${assignment.id}`}>
-                                <Card className="hover:border-orange-300 transition-colors cursor-pointer group">
-                                    <CardContent className="p-6">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex items-start gap-4">
-                                                <div className="h-12 w-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-orange-600 group-hover:text-white transition-colors">
-                                                    <BookOpen className="h-6 w-6" />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <h3 className="font-semibold text-lg text-slate-900">{assignment.title}</h3>
-                                                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                                                        <span>{assignment.tutors?.profiles?.full_name}</span>
-                                                        <span>•</span>
-                                                        <span className={`flex items-center gap-1 ${isOverdue ? "text-red-600 font-medium" : ""}`}>
-                                                            {isOverdue && <AlertCircle className="h-3 w-3" />}
-                                                            Due {format(new Date(assignment.due_date), 'PPP')}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <Button variant="outline" className="shrink-0">
-                                                View Details
-                                            </Button>
+                            <Link key={assignment.id} href={`${basePath}/assignments/${assignment.id}`}>
+                                <div className="bg-white rounded-xl border p-5 hover:shadow-md transition-all duration-200 group cursor-pointer" style={{ borderColor: `${brandColor}15` }}>
+                                    <div className="flex items-center gap-4">
+                                        <div
+                                            className="h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
+                                            style={{ backgroundColor: `${brandColor}10`, color: brandColor }}
+                                        >
+                                            <BookOpen className="h-5 w-5" />
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-slate-900 text-base group-hover:text-slate-700 truncate">{assignment.title}</h3>
+                                            <div className="flex items-center gap-2 text-sm text-slate-500 mt-0.5">
+                                                <Calendar className="h-3.5 w-3.5" />
+                                                <span className={isOverdue ? "text-red-500 font-medium" : ""}>
+                                                    {isOverdue && <AlertCircle className="h-3 w-3 inline mr-1" />}
+                                                    Due {format(new Date(assignment.due_date), 'MMM d, yyyy')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {isOverdue ? (
+                                                <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-red-50 text-red-600">Overdue</span>
+                                            ) : (
+                                                <span className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ backgroundColor: `${brandColor}10`, color: brandColor }}>
+                                                    Submit
+                                                </span>
+                                            )}
+                                            <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                                        </div>
+                                    </div>
+                                </div>
                             </Link>
                         );
                     })}
